@@ -1,130 +1,142 @@
 class AboutApp extends App {
-    name = "About Anura";
-    package = "anura.about";
-    icon = "/assets/icons/aboutapp.png";
+	name = "About Anura";
+	package = "anura.about";
+	icon = "/assets/icons/aboutapp.png";
 
-    page = () => (
-        <div class="aboutapp-container">
-            <div class="aboutapp-logo">
-                <div
-                    class="aboutapp-logo-img"
-                    title="Toss all your change to the wellspring..."
-                ></div>
-            </div>
-            <div class="aboutapp-logo-divider"></div>
-            <div class="aboutapp-content">
-                <p>AnuraOS</p>
-                <p>
-                    Version {anura.version.codename} ({anura.version.pretty})
-                    (OS build {this.getOSBuild()})
-                </p>
-                <p>© Mercury Workshop. All rights reserved.</p>
-                <br />
-                <div
-                    if={anura.settings.get("x86-disabled")}
-                    then={
-                        <p>
-                            Anura x86 subsystem disabled. <br /> Enable it in{" "}
-                            <button
-                                on:click={() => {
-                                    anura.apps["anura.settings"].open();
-                                }}
-                                class="aboutapp-link-button"
-                            >
-                                settings
-                            </button>
-                            .
-                        </p>
-                    }
-                    else={
-                        <p if={!anura.settings.get("x86-disabled")}>
-                            Anura x86 subsystem enabled.
-                        </p>
-                    }
-                />
+	page = () => (
+		<div class="aboutapp-container">
+			<div class="aboutapp-logo">
+				<div
+					class="aboutapp-logo-img"
+					title="Look what you've done"
+					on:click={() => {
+						anura.apps["anura.browser"].open([
+							"https://www.youtube.com/watch?v=34Na4j8AVgA",
+						]);
+					}}
+				></div>
+			</div>
+			<div class="aboutapp-logo-divider"></div>
+			<div class="aboutapp-content">
+				<p>AnuraOS</p>
+				<p>
+					Version {anura.version.codename} ({anura.version.pretty}) (OS build{" "}
+					{this.getOSBuild()})
+				</p>
+				<p>© Mercury Workshop. All rights reserved.</p>
+				<br />
+				{$if(
+					anura.settings.get("x86-disabled"),
+					<p>
+						Anura x86 subsystem disabled. <br /> Enable it in{" "}
+						<button
+							on:click={() => {
+								anura.apps["anura.settings"].open();
+							}}
+							class="aboutapp-link-button"
+						>
+							settings
+						</button>
+						.
+					</p>,
+					<p>Anura x86 subsystem enabled.</p>,
+				)}
 
-                <br />
-                <br />
+				<br />
 
-                <p>
-                    This product is licensed under the{" "}
-                    <a
-                        target="_blank"
-                        href="https://github.com/MercuryWorkshop/AliceWM/blob/master/LICENSE"
-                    >
-                        GNU AGPLv3
-                    </a>
-                </p>
-            </div>
-        </div>
-    );
+				{$if(
+					anura.settings.get("bootFromOPFS"),
+					<p>Anura is booting from OPFS.</p>,
+					<p>Anura OPFS boot disabled.</p>,
+				)}
 
-    constructor() {
-        super();
-    }
+				<br />
+				<br />
 
-    async open(args: string[] = []): Promise<WMWindow | undefined> {
-        let fullscreenEasterEgg = false;
+				<p>
+					This product is licensed under the{" "}
+					<button
+						on:click={() => {
+							anura.apps["anura.browser"].open([
+								"https://github.com/MercuryWorkshop/anuraOS/blob/main/LICENSE",
+							]);
+						}}
+						class="aboutapp-link-button"
+					>
+						GNU AGPLv3
+					</button>
+					.
+				</p>
+			</div>
+		</div>
+	);
 
-        if (args.length > 0) {
-            if (args.includes("fullscreen-easter-egg")) {
-                fullscreenEasterEgg = true;
-            }
-            if (args.includes("fuller-screen-easter-egg")) {
-                // You asked for it
-                document.body.style.background =
-                    "url(/assets/images/lagtrain.gif) no-repeat center center fixed";
+	constructor() {
+		super();
+	}
 
-                anura.wm.windows.forEach((win) => {
-                    // No animation
-                    win.deref()!.element.style.display = "none";
-                    win.deref()!.close();
-                });
+	async open(args: string[] = []): Promise<WMWindow | undefined> {
+		let fullscreenEasterEgg = false;
 
-                taskbar.element.remove();
+		if (args.length > 0) {
+			if (args.includes("fullscreen-easter-egg")) {
+				fullscreenEasterEgg = true;
+			}
+			if (args.includes("fuller-screen-easter-egg")) {
+				// You asked for it
+				document.body.style.background =
+					"url(/assets/images/idol.gif) no-repeat center center fixed";
 
-                document.title = "Lagtrain";
+				anura.wm.windows.forEach((win) => {
+					// No animation
+					win.deref()!.element.style.display = "none";
+					win.deref()!.close();
+				});
 
-                const icon = document.querySelector(
-                    "link[rel~='icon']",
-                )! as HTMLLinkElement;
+				taskbar.element.remove();
 
-                icon.type = "image/gif";
-                icon.href = "/assets/images/lagtrain.gif";
+				document.title = "Lagtrain";
 
-                return;
-            }
-        }
+				const icon = document.querySelector(
+					"link[rel~='icon']",
+				)! as HTMLLinkElement;
 
-        const aboutview = anura.wm.create(this, {
-            title: "",
-            width: "400px",
-            height: fullscreenEasterEgg ? "400px" : "450px",
-            resizable: false,
-        });
+				icon.type = "image/gif";
+				icon.href = "/assets/images/idol.gif";
 
-        if (fullscreenEasterEgg) {
-            aboutview.content.appendChild(
-                <div style="background: url(/assets/images/lagtrain.gif); width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat;"></div>,
-            );
-        } else {
-            aboutview.content.appendChild(this.page());
-        }
+				return;
+			}
+		}
 
-        // make borderless
-        aboutview.content.style.position = "absolute";
-        aboutview.content.style.height = "100%";
-        aboutview.content.style.display = "inline-block";
+		const aboutview = anura.wm.create(this, {
+			title: "",
+			width: "400px",
+			height: fullscreenEasterEgg ? "400px" : "450px",
+			resizable: false,
+		});
 
-        const container = aboutview.content.parentElement;
+		if (fullscreenEasterEgg) {
+			aboutview.content.appendChild(
+				<div style="background: url(/assets/images/idol.gif); width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat;"></div>,
+			);
+		} else {
+			aboutview.content.appendChild(this.page());
+		}
 
-        (container!.querySelector(".title") as any).style["background-color"] =
-            "rgba(0, 0, 0, 0)";
+		// make borderless
+		aboutview.content.style.position = "absolute";
+		aboutview.content.style.height = "100%";
+		aboutview.content.style.display = "inline-block";
 
-        return aboutview;
-    }
+		const container = aboutview.content.parentElement;
 
-    getOSBuild(): string {
-        return anura.settings.get("milestone").slice(0, 7);
-    }
+		(container!.querySelector(".title") as any).style["background-color"] =
+			"rgba(0, 0, 0, 0)";
+
+		return aboutview;
+	}
+
+	getOSBuild(): string {
+		return anura.settings.get("milestone").slice(0, 7);
+	}
 }

@@ -1,16 +1,16 @@
 class GenericApp extends App {
-    hidden = true;
-    constructor() {
-        super();
-        this.name = "Generic App";
-        this.icon = "/assets/icons/generic.png";
-        this.package = "anura.generic";
-    }
+	name = "Generic App";
+	package = "anura.generic";
+	icon = "/assets/icons/generic.svg";
+	hidden = true;
+	constructor() {
+		super();
+	}
 
-    async open(args: string[] = []): Promise<WMWindow | undefined> {
-        alert(
-            "This app is not supposed to be opened as it is a placeholder for other apps.",
-        );
-        return;
-    }
+	async open(args: string[] = []): Promise<WMWindow | undefined> {
+		anura.dialog.alert(
+			"This app is not supposed to be opened as it is a placeholder for other apps.",
+		);
+		return;
+	}
 }

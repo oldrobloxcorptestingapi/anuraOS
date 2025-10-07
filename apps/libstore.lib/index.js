@@ -1,533 +1,508 @@
-// This is a workaround for the fact that JSZip doesn't support ESM
-// There exists a fork of JSZip that does, but unfortunately performance is
-// significantly worse than the original
-import * as _ from "./jszip.js"
-let JSZip = window.JSZip;
-// Delete the global JSZip object to prevent pollution
-delete window.JSZip;
+const fflate = await anura.import("npm:fflate");
 
-const fs = Filer.fs;
+const fs = anura.fs;
 const Buffer = Filer.Buffer;
 
+function unzip(zip) {
+	return new Promise((res, rej) => {
+		fflate.unzip(zip, (err, unzipped) => {
+			if (err) rej(err);
+			else res(unzipped);
+		});
+	});
+}
+
 export class Store {
-    client;
-    cache;
-    hooks;
-    
-    constructor(client, hooks) {
-        this.client = client;
-        this.cache = {};
-        this.hooks = hooks || {
-            onError: (appName, error) => {
-                console.error(error);
-            },
-            onDownloadStart: (appName) => {
-                console.log("Download started");
-            },
-            onDepInstallStart: (appName, libName) => {
-                console.log("Dependency install started");
-            },
-            onComplete: (appName) => {
-                console.log("Download complete");
-            },
-        };
-    }
+	client;
+	cache;
+	hooks;
 
-    refresh(repos = []) {
-        if (repos.length === 0) {
-            this.cache = {};
-            return
-        }
-        repos.forEach((repo) => {
-            this.cache[repo] = null;
-        });
-    }
+	constructor(client, hooks) {
+		this.client = client;
+		this.cache = {};
+		this.hooks = hooks || {
+			onError: (appName, error) => {
+				console.error(error);
+			},
+			onDownloadStart: (appName, packageId) => {
+				console.log(`Download started for ${appName} (${packageId})`);
+			},
+			onDepInstallStart: (appName, libName) => {
+				console.log("Dependency install started");
+			},
+			onComplete: (appName) => {
+				console.log("Download complete");
+			},
+		};
+	}
 
-    async getRepo(url, name) {
-        if (this.cache[url]) {
-            return this.cache[url];
-        }
+	refresh(repos = []) {
+		if (repos.length === 0) {
+			this.cache = {};
+			return;
+		}
+		repos.forEach((repo) => {
+			this.cache[repo] = null;
+		});
+	}
 
-        let repo = new StoreRepo(this.client, this.hooks, url, name);
-        let manifestVersion = await repo.getRepoManifest();
-        repo.version = manifestVersion;
-        if (manifestVersion == "legacy") {
-            repo = new StoreLegacyRepo(this.client, this.hooks, url, name);
-        }
-        await repo.refreshRepoCache();
-        this.cache[url] = repo;
-        return repo;
-    }
+	async getRepo(url, name) {
+		if (this.cache[url]) {
+			return this.cache[url];
+		}
+
+		let repo = new StoreRepo(this.client, this.hooks, url, name);
+		let manifestVersion = await repo.getRepoManifest();
+		repo.version = manifestVersion;
+		if (manifestVersion === "legacy") {
+			repo = new StoreRepoLegacy(this.client, this.hooks, url, name);
+		}
+		await repo.refreshRepoCache();
+		this.cache[url] = repo;
+		return repo;
+	}
 }
 
 export class StoreRepo {
-    baseUrl;
-    name;
-    client;
-    hooks;
-    repoCache;
-    manifest;
-    version;
-    thumbCache = { apps: {}, libs: {} };
+	baseUrl;
+	name;
+	client;
+	hooks;
+	repoCache;
+	manifest;
+	version;
+	thumbCache = { apps: {}, libs: {} };
 
-    directories = anura.settings.get("directories");
+	directories = anura.settings.get("directories");
 
-    constructor(client, hooks, baseUrl, name) {
-        this.client = client;
-        this.hooks = hooks;
-        this.baseUrl = baseUrl;
-        this.name = name;
-    }
-    
-    setHook(name, fn) {
-        this.hooks[name] = fn;
-    }
-    
-    async refreshRepoCache() {
-        try {
-            let list = await (await this.client.fetch(this.baseUrl + "list.json")).json();
-            let repoCache = {};
-            console.log(list)
-            for (const category in list) {
-                repoCache[`${category}`] = [];
-                await Promise.all(list[category].map(async (app) => {
-                    app.baseUrl = this.baseUrl + category + '/' + app.package + '/'
-                    app.repo = this.baseUrl
-                    repoCache[`${category}`].push(app);
-                }));
-            }
-    
-            this.repoCache = repoCache;
-        } catch (error) {
-            console.log(error)
-            throw error;
-        }
-    }
+	constructor(client, hooks, baseUrl, name) {
+		this.client = client;
+		this.hooks = hooks;
+		this.baseUrl = baseUrl;
+		this.name = name;
+	}
 
-    async getRepoManifest() {
-        let manifest = await (
-            await this.client.fetch(this.baseUrl + "manifest.json")
-        )
-        if (manifest.ok) {
-            this.manifest = await manifest.json()
-            return this.manifest.version;
-        } else {
-            return "legacy";
-        }
-    }
+	setHook(name, fn) {
+		this.hooks[name] = fn;
+	}
 
-    refreshThumbCache() {
-        this.thumbCache = { apps: {}, libs: {} };
-    }
+	async refreshRepoCache() {
+		try {
+			let list = await (
+				await this.client.fetch(this.baseUrl + "list.json")
+			).json();
+			let repoCache = {};
+			for (const category in list) {
+				repoCache[`${category}`] = [];
+				await Promise.all(
+					list[category].map(async (app) => {
+						app.baseUrl = this.baseUrl + category + "/" + app.package + "/";
+						app.repo = this.baseUrl;
+						repoCache[`${category}`].push(app);
+					}),
+				);
+			}
 
-    async getAppThumb(appName) {
-        if (this.thumbCache.apps[appName]) {
-            return this.thumbCache.apps[appName];
-        }
-        const app = await this.getApp(appName);
-        if (!app) {
-            throw new Error("App not found");
-        }
-        let thumb;
-        try {
-            thumb = URL.createObjectURL(await (await fetch(app.baseUrl + app.icon)).blob())
-        } catch (e) {
-            // Probably a network error, the sysadmin might have blocked the repo, this isn't the default because its a massive waste of bandwidth
-            thumb = URL.createObjectURL(await (await this.client.fetch(app.baseUrl + app.icon)).blob())
-        }
-        this.thumbCache.apps[appName] = thumb;
-        return thumb;
-    }
+			this.repoCache = repoCache;
+		} catch (error) {
+			console.error(error);
+			throw error;
+		}
+	}
 
-    async getLibThumb(libName) {
-        if (this.thumbCache.libs[libName]) {
-            return this.thumbCache.libs[libName];
-        }
-        const lib = await this.getLib(libName);
-        if (!lib) {
-            throw new Error("Lib not found");
-        }
-        let thumb;
-        try {
-            thumb = URL.createObjectURL(await (await fetch(lib.baseUrl + lib.icon)).blob())
-        } catch (e) {
-            // Probably a network error, the sysadmin might have blocked the repo, this isn't the default because its a massive waste of bandwidth
-            thumb = URL.createObjectURL(await (await this.client.fetch(lib.baseUrl + lib.icon)).blob())
-        }
-        this.thumbCache.libs[libName] = thumb;
-        return thumb;
-    }
+	async getRepoManifest() {
+		let manifest = await await this.client.fetch(
+			this.baseUrl + "manifest.json",
+		);
+		if (manifest.ok) {
+			this.manifest = await manifest.json();
+			return this.manifest.version;
+		} else {
+			return "legacy";
+		}
+	}
 
-    async getApps() {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        return this.repoCache.apps || [];
-    }
+	refreshThumbCache() {
+		this.thumbCache = { apps: {}, libs: {} };
+	}
 
-    async getApp(appName) {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        let app = this.repoCache.apps.find((app) => app.package === appName);
-        console.log(app)
-        return app
-    }
+	async getAppThumb(appName) {
+		if (this.thumbCache.apps[appName]) {
+			return this.thumbCache.apps[appName];
+		}
+		const app = await this.getApp(appName);
+		if (!app) {
+			throw new Error("App not found");
+		}
+		let thumb = URL.createObjectURL(
+			await (await this.client.fetch(encodeURI(app.baseUrl + app.icon))).blob(),
+		);
+		this.thumbCache.apps[appName] = thumb;
+		return thumb;
+	}
 
-    async getLibs() {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        return this.repoCache.libs || [];
-    }
+	async getLibThumb(libName) {
+		if (this.thumbCache.libs[libName]) {
+			return this.thumbCache.libs[libName];
+		}
+		const lib = await this.getLib(libName);
+		if (!lib) {
+			throw new Error("Lib not found");
+		}
+		let thumb = URL.createObjectURL(
+			await (await this.client.fetch(encodeURI(lib.baseUrl + lib.icon))).blob(),
+		);
+		this.thumbCache.libs[libName] = thumb;
+		return thumb;
+	}
 
-    async getLib(libName) {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        let lib = this.repoCache.libs.find((lib) => lib.package === libName);
-        console.log(lib)
-        return lib
-    }
+	async getApps() {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		return this.repoCache.apps || [];
+	}
 
-    async installApp(appName) {
-        const app = await this.getApp(appName);
-        if (!app) {
-            throw new Error("App not found");
-        }
-        this.hooks.onDownloadStart(appName);
+	async getApp(appName) {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		let app = this.repoCache.apps.find((app) => app.package === appName);
+		return app;
+	}
 
-        if (app.dependencies) {
-            for (const lib of app.dependencies) {
-                let hasDep =
-                    Object.keys(anura.libs).filter(
-                        (x) => anura.libs[x].name == lib,
-                    ).length > 0;
-                if (hasDep) continue;
-                this.hooks.onDepInstallStart(appName, lib);
-                await this.installLib(lib);
-            }
-        }
+	async getLibs() {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		return this.repoCache.libs || [];
+	}
 
-        const zipFile = await (await this.client.fetch(app.baseUrl + app.data)).blob();
-        let zip = await JSZip.loadAsync(zipFile);
-        console.log(zip);
+	async getLib(libName) {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		let lib = this.repoCache.libs.find((lib) => lib.package === libName);
+		return lib;
+	}
 
-        const path = `${this.directories["apps"]}/${appName}.app`;
+	async installApp(appName) {
+		const app = await this.getApp(appName);
+		if (!app) {
+			throw new Error("App not found");
+		}
+		this.hooks.onDownloadStart(app.name, app.package);
 
-        await new Promise((resolve) =>
-            new fs.Shell().mkdirp(path, function () {
-                resolve();
-            }),
-        );
+		if (app.dependencies) {
+			for (const lib of app.dependencies) {
+				let hasDep =
+					Object.keys(anura.libs).filter((x) => anura.libs[x].package === lib)
+						.length > 0;
+				if (hasDep) continue;
+				this.hooks.onDepInstallStart(app.name, lib);
+				await this.installLib(lib);
+			}
+		}
 
-        let installHook;
-        if (app.InstallHook) {
-          const installHookText = await (await this.client.fetch(app.baseUrl + app.installHook)).text()
-          installHook = installHookText
-        }
+		const zipFile = new Uint8Array(
+			await (
+				await this.client.fetch(encodeURI(app.baseUrl + app.data))
+			).arrayBuffer(),
+		);
+		let zip = await unzip(zipFile);
 
-        try {
-            for (const [_, zipEntry] of Object.entries(
-                zip.files,
-            )) {
-                if (zipEntry.dir) {
-                    fs.mkdir(`${path}/${zipEntry.name}`);
-                } else {
-                    if (zipEntry.name == "manifest.json") {
-                        let manifest = await zipEntry.async("string");
-                        manifest = JSON.parse(manifest);
-                        manifest.marketplace = {};
-                        if (app.version) {
-                            manifest.marketplace.version = app.version
-                        }
-                        manifest.marketplace.repo = app.repo
-                        if (app.dependencies) {
-                            manifest.marketplace.dependencies = app.dependencies
-                        }
-                        fs.writeFile(
-                            `${path}/${zipEntry.name}`,
-                            JSON.stringify(manifest),
-                        );
-                        continue;
-                    }
-                    fs.writeFile(
-                        `${path}/${zipEntry.name}`,
-                        await Buffer.from(
-                            await zipEntry.async("arraybuffer"),
-                        ),
-                    );
-                }
-            }
-            await sleep(500) // race condition because of manifest.json
-            await anura.registerExternalApp("/fs" + path);
-            if (installHook) window.top.eval(installHook);
-            this.hooks.onComplete(appName);
-        } catch (error) {
-            this.hooks.onError(appName, error);
-        }
-    }
+		const path = `${this.directories["apps"]}/${appName}.app`;
 
-    async installLib(libName) {
-        const lib = await this.getLib(libName);
-        if (!lib) {
-            throw new Error("Lib not found");
-        }
-        this.hooks.onDownloadStart(libName);
-        const zipFile = await (await this.client.fetch(lib.baseUrl + lib.data)).blob();
-        let zip = await JSZip.loadAsync(zipFile);
-        console.log(zip);
+		await new Promise((resolve) =>
+			new fs.Shell().mkdirp(path, function () {
+				resolve();
+			}),
+		);
 
-        const path = `${this.directories["apps"]}/${libName}.lib`;
+		let installHook = null;
+		if (app.InstallHook) {
+			const installHookText = await (
+				await this.client.fetch(app.baseUrl + app.installHook)
+			).text();
+			installHook = installHookText;
+		}
 
-        await new Promise((resolve) =>
-            new fs.Shell().mkdirp(path, function () {
-                resolve();
-            }),
-        );
+		try {
+			for (const [relativePath, content] of Object.entries(zip)) {
+				if (relativePath.endsWith("/")) {
+					await fs.promises.mkdir(`${path}/${relativePath}`);
+				} else {
+					if (relativePath === "manifest.json") {
+						let manifest = new TextDecoder().decode(content);
+						manifest = JSON.parse(manifest);
+						manifest.marketplace = {};
+						if (app.version) {
+							manifest.marketplace.version = app.version;
+						}
+						manifest.marketplace.repo = app.repo;
+						if (app.dependencies) {
+							manifest.marketplace.dependencies = app.dependencies;
+						}
+						await fs.promises.writeFile(
+							`${path}/${relativePath}`,
+							JSON.stringify(manifest),
+						);
+						continue;
+					}
+					await fs.promises.writeFile(
+						`${path}/${relativePath}`,
+						await Buffer.from(content),
+					);
+				}
+			}
+			await anura.registerExternalApp("/fs" + path);
+			if (installHook) window.top.eval(installHook);
+			this.hooks.onComplete(app.name);
+			return 200; // throw new Error is truthy so this is my solution
+		} catch (error) {
+			this.hooks.onError(app.name, error);
+		}
+	}
 
-        try {
-            for (const [_, zipEntry] of Object.entries(
-                zip.files,
-            )) {
-                if (zipEntry.dir) {
-                    fs.mkdir(`${path}/${zipEntry.name}`);
-                } else {
-                    if (zipEntry.name == "manifest.json") {
-                        let manifest = await zipEntry.async("string");
-                        manifest = JSON.parse(manifest);
-                        manifest.marketplace = {};
-                        manifest.marketplace.version = lib.version
-                        manifest.marketplace.repo = lib.repo
-                        if (lib.dependencies) {
-                            manifest.marketplace.dependencies = lib.dependencies
-                        }
-                        fs.writeFile(
-                            `${path}/${zipEntry.name}`,
-                            JSON.stringify(manifest),
-                        );
-                        continue;
-                    }
-                    fs.writeFile(
-                        `${path}/${zipEntry.name}`,
-                        await Buffer.from(
-                            await zipEntry.async("arraybuffer"),
-                        ),
-                    );
-                }
-            }
-            await sleep(500) // race condition because of manifest.json
-            await anura.registerExternalLib("/fs" + path);
-            this.hooks.onComplete(libName);
-        } catch (error) {
-            this.hooks.onError(libName, error);
-        }
-    }
+	async installLib(libName) {
+		const lib = await this.getLib(libName);
+		if (!lib) {
+			throw new Error("Lib not found");
+		}
+		this.hooks.onDownloadStart(lib.name, lib.package);
+		const zipFile = new Uint8Array(
+			await (await this.client.fetch(lib.baseUrl + lib.data)).arrayBuffer(),
+		);
+		let zip = await unzip(zipFile);
 
+		const path = `${this.directories["libs"]}/${libName}.lib`;
+
+		await new Promise((resolve) =>
+			new fs.Shell().mkdirp(path, function () {
+				resolve();
+			}),
+		);
+
+		try {
+			for (const [relativePath, content] of Object.entries(zip)) {
+				if (relativePath.endsWith("/")) {
+					await fs.promises.mkdir(`${path}/${relativePath}`);
+				} else {
+					if (relativePath === "manifest.json") {
+						let manifest = new TextDecoder().decode(content);
+						manifest = JSON.parse(manifest);
+						manifest.marketplace = {};
+						if (lib.version) {
+							manifest.marketplace.version = lib.version;
+						}
+						manifest.marketplace.repo = lib.repo;
+						if (lib.dependencies) {
+							manifest.marketplace.dependencies = lib.dependencies;
+						}
+						fs.writeFile(`${path}/${relativePath}`, JSON.stringify(manifest));
+						continue;
+					}
+					fs.writeFile(`${path}/${relativePath}`, await Buffer.from(content));
+				}
+			}
+			await sleep(500); // race condition because of manifest.json
+			await anura.registerExternalLib("/fs" + path);
+			this.hooks.onComplete(lib.name);
+			return 200;
+		} catch (error) {
+			this.hooks.onError(lib.name, error);
+		}
+	}
 }
 
-export class StoreLegacyRepo {
-    baseUrl;
-    name;
-    client;
-    hooks;
-    repoCache;
-    version;
-    thumbCache = { apps: {}, libs: {} };
+export class StoreRepoLegacy {
+	baseUrl;
+	name;
+	client;
+	hooks;
+	repoCache;
+	version;
+	thumbCache = { apps: {}, libs: {} };
 
-    directories = anura.settings.get("directories");
+	directories = anura.settings.get("directories");
 
-    constructor(client, hooks, baseUrl, name) {
-        this.client = client;
-        this.hooks = hooks;
-        this.baseUrl = baseUrl;
-        this.name = name;
-        this.version = "legacy";
-    }
-    
-    setHook(name, fn) {
-        this.hooks[name] = fn;
-    }
-    
-    async refreshRepoCache() {
-        this.repoCache = await (
-            await this.client.fetch(this.baseUrl + "list.json")
-        ).json();
-    }
+	constructor(client, hooks, baseUrl, name) {
+		this.client = client;
+		this.hooks = hooks;
+		this.baseUrl = baseUrl;
+		this.name = name;
+		this.version = "legacy";
+	}
 
-    refreshThumbCache() {
-        this.thumbCache = { apps: {}, libs: {} };
-    }
+	setHook(name, fn) {
+		this.hooks[name] = fn;
+	}
 
-    async getAppThumb(appName) {
-        if (this.thumbCache.apps[appName]) {
-            return this.thumbCache.apps[appName];
-        }
-        const app = await this.getApp(appName);
-        if (!app) {
-            throw new Error("App not found");
-        }
-        let thumb;
-        try {
-            thumb = URL.createObjectURL(await (await fetch(this.baseUrl + app.icon)).blob())
-        } catch (e) {
-            // Probably a network error, the sysadmin might have blocked the repo, this isn't the default because its a massive waste of bandwidth
-            thumb = URL.createObjectURL(await (await this.client.fetch(this.baseUrl + app.icon)).blob())
-        }
-        this.thumbCache.apps[appName] = thumb;
-        return thumb;
-    }
+	async refreshRepoCache() {
+		this.repoCache = await (
+			await this.client.fetch(this.baseUrl + "list.json")
+		).json();
+	}
 
-    async getLibThumb(libName) {
-        if (this.thumbCache.libs[libName]) {
-            return this.thumbCache.libs[libName];
-        }
-        const lib = await this.getLib(libName);
-        if (!lib) {
-            throw new Error("Lib not found");
-        }
-        let thumb;
-        try {
-            thumb = URL.createObjectURL(await (await fetch(this.baseUrl + lib.icon)).blob())
-        } catch (e) {
-            // Probably a network error, the sysadmin might have blocked the repo, this isn't the default because its a massive waste of bandwidth
-            thumb = URL.createObjectURL(await (await this.client.fetch(this.baseUrl + lib.icon)).blob())
-        }
-        this.thumbCache.libs[libName] = thumb;
-        return thumb;
-    }
+	refreshThumbCache() {
+		this.thumbCache = { apps: {}, libs: {} };
+	}
 
-    async getApps() {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        return this.repoCache.apps || [];
-    }
+	async getAppThumb(appName) {
+		if (this.thumbCache.apps[appName]) {
+			return this.thumbCache.apps[appName];
+		}
+		const app = await this.getApp(appName);
+		if (!app) {
+			throw new Error("App not found");
+		}
+		let thumb = URL.createObjectURL(
+			await (
+				await this.client.fetch(encodeURI(this.baseUrl + app.icon))
+			).blob(),
+		);
+		this.thumbCache.apps[appName] = thumb;
+		return thumb;
+	}
 
-    async getApp(appName) {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        return this.repoCache.apps.find((app) => app.name === appName);
-    }
+	async getLibThumb(libName) {
+		if (this.thumbCache.libs[libName]) {
+			return this.thumbCache.libs[libName];
+		}
+		const lib = await this.getLib(libName);
+		if (!lib) {
+			throw new Error("Lib not found");
+		}
+		let thumb = URL.createObjectURL(
+			await (
+				await this.client.fetch(encodeURI(this.baseUrl + lib.icon))
+			).blob(),
+		);
+		this.thumbCache.libs[libName] = thumb;
+		return thumb;
+	}
 
-    async getLibs() {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        return this.repoCache.libs || [];
-    }
+	async getApps() {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		return this.repoCache.apps || [];
+	}
 
-    async getLib(libName) {
-        if (!this.repoCache) {
-            await this.refreshRepoCache();
-        }
-        return this.repoCache.libs.find((lib) => lib.name === libName);
-    }
+	async getApp(appName) {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		return this.repoCache.apps.find((app) => app.name === appName);
+	}
 
-    async installApp(appName) {
-        const app = await this.getApp(appName);
-        if (!app) {
-            throw new Error("App not found");
-        }
-        this.hooks.onDownloadStart(appName);
+	async getLibs() {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		return this.repoCache.libs || [];
+	}
 
-        if (app.dependencies) {
-            for (const lib of app.dependencies) {
-                let hasDep =
-                    Object.keys(anura.libs).filter(
-                        (x) => anura.libs[x].name == lib,
-                    ).length > 0;
-                if (hasDep) continue;
-                this.hooks.onDepInstallStart(appName, lib);
-                await this.installLib(lib);
-            }
-        }
+	async getLib(libName) {
+		if (!this.repoCache) {
+			await this.refreshRepoCache();
+		}
+		return this.repoCache.libs.find((lib) => lib.name === libName);
+	}
 
-        const zipFile = await (await this.client.fetch(this.baseUrl + app.data)).blob();
-        let zip = await JSZip.loadAsync(zipFile);
-        console.log(zip);
+	async installApp(appName) {
+		const app = await this.getApp(appName);
+		if (!app) {
+			throw new Error("App not found");
+		}
+		this.hooks.onDownloadStart(appName, appName);
 
-        const path = `${this.directories["apps"]}/${appName}.app`;
+		if (app.dependencies) {
+			for (const lib of app.dependencies) {
+				let hasDep =
+					Object.keys(anura.libs).filter((x) => anura.libs[x].name === lib)
+						.length > 0;
+				if (hasDep) continue;
+				this.hooks.onDepInstallStart(appName, lib);
+				await this.installLib(lib);
+			}
+		}
 
-        await new Promise((resolve) =>
-            new fs.Shell().mkdirp(path, function () {
-                resolve();
-            }),
-        );
+		const zipFile = new Uint8Array(
+			await (
+				await this.client.fetch(encodeURI(this.baseUrl + app.data))
+			).arrayBuffer(),
+		);
+		let zip = await unzip(zipFile);
 
-        let postInstallScript;
+		const path = `${this.directories["apps"]}/${appName}.app`;
 
-        try {
-            for (const [_, zipEntry] of Object.entries(
-                zip.files,
-            )) {
-                if (zipEntry.dir) {
-                    fs.mkdir(`${path}/${zipEntry.name}`);
-                } else {
-                    if (zipEntry.name == "post_install.js") {
-                        let script = await zipEntry.async("string");
-                        postInstallScript = script;
-                        continue;
-                    }
-                    fs.writeFile(
-                        `${path}/${zipEntry.name}`,
-                        await Buffer.from(
-                            await zipEntry.async("arraybuffer"),
-                        ),
-                    );
-                }
-            }
-            await sleep(500) // race condition because of manifest.json
-            await anura.registerExternalApp("/fs" + path);
-            if (postInstallScript) window.top.eval(postInstallScript);
-            this.hooks.onComplete(appName);
-        } catch (error) {
-            this.hooks.onError(appName, error);
-        }
-    }
+		await new Promise((resolve) =>
+			new fs.Shell().mkdirp(path, function () {
+				resolve();
+			}),
+		);
 
-    async installLib(libName) {
-        const lib = await this.getLib(libName);
-        if (!lib) {
-            throw new Error("Lib not found");
-        }
-        this.hooks.onDownloadStart(libName);
-        const zipFile = await (await this.client.fetch(this.baseUrl + lib.data)).blob();
-        let zip = await JSZip.loadAsync(zipFile);
-        console.log(zip);
+		let postInstallScript;
 
-        const path = `${this.directories["apps"]}/${libName}.lib`;
+		try {
+			for (const [relativePath, content] of Object.entries(zip)) {
+				if (relativePath.endsWith("/")) {
+					await fs.promises.mkdir(`${path}/${relativePath}`);
+				} else {
+					if (relativePath == "post_install.js") {
+						let script = new TextDecoder().decode(content);
+						postInstallScript = script;
+						continue;
+					}
+					fs.writeFile(`${path}/${relativePath}`, await Buffer.from(content));
+				}
+			}
+			await sleep(500); // race condition because of manifest.json
+			await anura.registerExternalApp("/fs" + path);
+			if (postInstallScript) window.top.eval(postInstallScript);
+			this.hooks.onComplete(appName);
+		} catch (error) {
+			this.hooks.onError(appName, error);
+		}
+	}
 
-        await new Promise((resolve) =>
-            new fs.Shell().mkdirp(path, function () {
-                resolve();
-            }),
-        );
+	async installLib(libName) {
+		const lib = await this.getLib(libName);
+		if (!lib) {
+			throw new Error("Lib not found");
+		}
+		this.hooks.onDownloadStart(libName, libName);
+		const zipFile = new Uint8Array(
+			await (
+				await this.client.fetch(encodeURI(this.baseUrl + lib.data))
+			).arrayBuffer(),
+		);
+		let zip = await unzip(zipFile);
 
-        try {
-            for (const [_, zipEntry] of Object.entries(
-                zip.files,
-            )) {
-                if (zipEntry.dir) {
-                    fs.mkdir(`${path}/${zipEntry.name}`);
-                } else {
-                    fs.writeFile(
-                        `${path}/${zipEntry.name}`,
-                        await Buffer.from(
-                            await zipEntry.async("arraybuffer"),
-                        ),
-                    );
-                }
-            }
-            await sleep(500) // race condition because of manifest.json
-            await anura.registerExternalLib("/fs" + path);
-            this.hooks.onComplete(libName);
-        } catch (error) {
-            this.hooks.onError(libName, error);
-        }
-    }
+		const path = `${this.directories["libs"]}/${libName}.lib`;
 
+		await new Promise((resolve) =>
+			new fs.Shell().mkdirp(path, function () {
+				resolve();
+			}),
+		);
+
+		try {
+			for (const [relativePath, content] of Object.entries(zip)) {
+				if (relativePath.endsWith("/")) {
+					await fs.promises.mkdir(`${path}/${relativePath}`);
+				} else {
+					fs.writeFile(`${path}/${relativePath}`, await Buffer.from(content));
+				}
+			}
+			await sleep(500); // race condition because of manifest.json
+			await anura.registerExternalLib("/fs" + path);
+			this.hooks.onComplete(libName);
+		} catch (error) {
+			this.hooks.onError(libName, error);
+		}
+	}
 }
-// Re-export JSZip for convenience
-export { JSZip };
+// Re-export fflate for convenience
+export { fflate };

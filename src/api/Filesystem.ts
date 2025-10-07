@@ -1,339 +1,55 @@
-const AnuraFDSymbol = Symbol.for("AnuraFD");
+const numberSymbol = Symbol.for("number");
 
 type AnuraFD = {
-    fd: number;
-    [AnuraFDSymbol]: string;
+	fd: number;
+	[numberSymbol]: string;
 };
 
 abstract class AnuraFSOperations<TStats> {
-    /*
-     * Synchronous FS operations
-     */
+	/*
+	 * Synchronous FS operations
+	 */
 
-    abstract rename(
-        oldPath: string,
-        newPath: string,
-        callback?: (err: Error | null) => void,
-    ): void;
+	/*
+	 * Asynchronous FS operations
+	 */
 
-    abstract ftruncate(
-        fd: AnuraFD,
-        len: number,
-        callback?: (err: Error | null, fd: AnuraFD) => void,
-    ): void;
-
-    abstract truncate(
-        path: string,
-        len: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract stat(
-        path: string,
-        callback?: (err: Error | null, stats: TStats) => void,
-    ): void;
-
-    abstract fstat(
-        fd: AnuraFD,
-        callback?: (err: Error | null, stats: TStats) => void,
-    ): void;
-
-    abstract lstat(
-        path: string,
-        callback?: (err: Error | null, stats: TStats) => void,
-    ): void;
-
-    /** @deprecated fs.exists() is an anachronism and exists only for historical reasons. */
-    abstract exists(path: string, callback?: (exists: boolean) => void): void;
-
-    abstract link(
-        srcPath: string,
-        dstPath: string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract symlink(
-        srcPath: string,
-        dstPath: string,
-        type: string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract symlink(
-        srcPath: string,
-        dstPath: string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract readlink(
-        path: string,
-        callback?: (err: Error | null, linkContents: string) => void,
-    ): void;
-
-    abstract unlink(path: string, callback?: (err: Error | null) => void): void;
-
-    abstract mknod(
-        path: string,
-        mode: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract rmdir(path: string, callback?: (err: Error | null) => void): void;
-
-    abstract mkdir(
-        path: string,
-        mode: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract mkdir(path: string, callback?: (err: Error | null) => void): void;
-
-    abstract access(
-        path: string,
-        mode: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract access(path: string, callback?: (err: Error | null) => void): void;
-
-    abstract mkdtemp(
-        prefix: string,
-        options: { encoding: string } | string,
-        callback?: (err: Error | null, path: string) => void,
-    ): void;
-
-    abstract mkdtemp(
-        prefix: string,
-        callback?: (err: Error | null, path: string) => void,
-    ): void;
-
-    abstract readdir(
-        path: string,
-        options: { encoding: string; withFileTypes: boolean } | string,
-        callback?: (err: Error | null, files: string[]) => void,
-    ): void;
-
-    abstract readdir(
-        path: string,
-        callback?: (err: Error | null, files: string[]) => void,
-    ): void;
-
-    abstract close(fd: AnuraFD, callback?: (err: Error | null) => void): void;
-
-    abstract open(
-        path: string,
-        flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-        mode: number,
-        callback?: (err: Error | null, fd: AnuraFD) => void,
-    ): void;
-
-    abstract open(
-        path: string,
-        flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-        callback?: (err: Error | null, fd: AnuraFD) => void,
-    ): void;
-
-    abstract utimes(
-        path: string,
-        atime: number | Date,
-        mtime: number | Date,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract futimes(
-        fd: AnuraFD,
-        atime: number | Date,
-        mtime: number | Date,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract chown(
-        path: string,
-        uid: number,
-        gid: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract fchown(
-        fd: AnuraFD,
-        uid: number,
-        gid: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract chmod(
-        path: string,
-        mode: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract fchmod(
-        fd: AnuraFD,
-        mode: number,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract fsync(fd: AnuraFD, callback?: (err: Error | null) => void): void;
-
-    abstract write(
-        fd: AnuraFD,
-        buffer: Uint8Array,
-        offset: number,
-        length: number,
-        position: number | null,
-        callback?: (err: Error | null, nbytes: number) => void,
-    ): void;
-
-    abstract read(
-        fd: AnuraFD,
-        buffer: Uint8Array,
-        offset: number,
-        length: number,
-        position: number | null,
-        callback?: (
-            err: Error | null,
-            nbytes: number,
-            buffer: Uint8Array,
-        ) => void,
-    ): void;
-
-    abstract readFile(
-        path: string,
-        callback?: (err: Error | null, data: Uint8Array) => void,
-    ): void;
-
-    abstract writeFile(
-        path: string,
-        data: Uint8Array | string,
-        options:
-            | { encoding: string; flag: "r" | "r+" | "w" | "w+" | "a" | "a+" }
-            | string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract writeFile(
-        path: string,
-        data: Uint8Array | string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract appendFile(
-        path: string,
-        data: Uint8Array,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract setxattr(
-        path: string,
-        name: string,
-        value: string | object,
-        flag: "CREATE" | "REPLACE",
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract setxattr(
-        path: string,
-        name: string,
-        value: string | object,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract fsetxattr(
-        fd: AnuraFD,
-        name: string,
-        value: string | object,
-        flag: "CREATE" | "REPLACE",
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract fsetxattr(
-        fd: AnuraFD,
-        name: string,
-        value: string | object,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract getxattr(
-        path: string,
-        name: string,
-        callback?: (err: Error | null, value: string | object) => void,
-    ): void;
-
-    abstract fgetxattr(
-        fd: AnuraFD,
-        name: string,
-        callback?: (err: Error | null, value: string | object) => void,
-    ): void;
-
-    abstract removexattr(
-        path: string,
-        name: string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    abstract fremovexattr(
-        fd: AnuraFD,
-        name: string,
-        callback?: (err: Error | null) => void,
-    ): void;
-
-    /*
-     * Asynchronous FS operations
-     */
-
-    abstract promises: {
-        appendFile(
-            path: string,
-            data: Uint8Array,
-            options: { encoding: string; mode: number; flag: string },
-        ): Promise<void>;
-        access(path: string, mode?: number): Promise<void>;
-        chown(path: string, uid: number, gid: number): Promise<void>;
-        chmod(path: string, mode: number): Promise<void>;
-        getxattr(path: string, name: string): Promise<string | object>;
-        link(srcPath: string, dstPath: string): Promise<void>;
-        lstat(path: string): Promise<TStats>;
-        mkdir(path: string, mode?: number): Promise<void>;
-        mkdtemp(
-            prefix: string,
-            options?: { encoding: string },
-        ): Promise<string>;
-        mknod(path: string, mode: number): Promise<void>;
-        open(
-            path: string,
-            flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-            mode?: number,
-        ): Promise<AnuraFD>;
-        readdir(
-            path: string,
-            options?: string | { encoding: string; withFileTypes: boolean },
-        ): Promise<string[]>;
-        readFile(path: string): Promise<Uint8Array>;
-        readlink(path: string): Promise<string>;
-        removexattr(path: string, name: string): Promise<void>;
-        rename(oldPath: string, newPath: string): Promise<void>;
-        rmdir(path: string): Promise<void>;
-        setxattr(
-            path: string,
-            name: string,
-            value: string | object,
-            flag?: "CREATE" | "REPLACE",
-        ): Promise<void>;
-        stat(path: string): Promise<TStats>;
-        symlink(srcPath: string, dstPath: string, type?: string): Promise<void>;
-        truncate(path: string, len: number): Promise<void>;
-        unlink(path: string): Promise<void>;
-        utimes(
-            path: string,
-            atime: number | Date,
-            mtime: number | Date,
-        ): Promise<void>;
-        writeFile(
-            path: string,
-            data: Uint8Array | string,
-            options?: { encoding: string; mode: number; flag: string },
-        ): Promise<void>;
-    };
+	abstract promises: {
+		appendFile(
+			path: string,
+			data: Uint8Array,
+			options: { encoding: string; mode: number; flag: string },
+		): Promise<void>;
+		access(path: string, mode?: number): Promise<void>;
+		chown(path: string, uid: number, gid: number): Promise<void>;
+		chmod(path: string, mode: number): Promise<void>;
+		link(srcPath: string, dstPath: string): Promise<void>;
+		lstat(path: string): Promise<TStats>;
+		mkdir(path: string, mode?: number): Promise<void>;
+		mkdtemp(prefix: string, options?: { encoding: string }): Promise<string>;
+		readdir(
+			path: string,
+			options?: string | { encoding: string; withFileTypes: boolean },
+		): Promise<string[]>;
+		readFile(path: string): Promise<Uint8Array>;
+		readlink(path: string): Promise<string>;
+		rename(oldPath: string, newPath: string): Promise<void>;
+		rmdir(path: string): Promise<void>;
+		stat(path: string): Promise<TStats>;
+		symlink(srcPath: string, dstPath: string, type?: string): Promise<void>;
+		truncate(path: string, len: number): Promise<void>;
+		unlink(path: string): Promise<void>;
+		utimes(
+			path: string,
+			atime: number | Date,
+			mtime: number | Date,
+		): Promise<void>;
+		writeFile(
+			path: string,
+			data: Uint8Array | string,
+			options?: { encoding: string; mode: number; flag: string },
+		): Promise<void>;
+	};
 }
 
 /**
@@ -341,565 +57,569 @@ abstract class AnuraFSOperations<TStats> {
  * This should be extended by the various filesystem providers
  */
 abstract class AFSProvider<TStats> extends AnuraFSOperations<TStats> {
-    /**
-     * This is the domain that the filesystem provider is responsible
-     * for. The provider with the most specific domain
-     * will be used to handle a given path.
-     *
-     * @example "/" If you want to handle the root filesystem
-     *
-     * @example "/tmp" If you want to handle everything under /tmp.
-     * This will take precedence over the root filesystem.
-     */
-    abstract domain: string;
+	/**
+	 * This is the domain that the filesystem provider is responsible
+	 * for. The provider with the most specific domain
+	 * will be used to handle a given path.
+	 *
+	 * @example "/" If you want to handle the root filesystem
+	 *
+	 * @example "/tmp" If you want to handle everything under /tmp.
+	 * This will take precedence over the root filesystem.
+	 */
+	abstract domain: string;
 
-    /**
-     * The name of the filesystem provider
-     */
-    abstract name: string;
+	/**
+	 * The name of the filesystem provider
+	 */
+	abstract name: string;
 
-    /**
-     * The filesystem provider's version
-     */
-    abstract version: string;
+	/**
+	 * The filesystem provider's version
+	 */
+	abstract version: string;
 }
 
 class AFSShell {
-    env = new Proxy({} as { [key: string]: string }, {
-        get: (target: { [key: string]: string }, prop: string) => {
-            if (prop === "set") {
-                return (key: string, value: string) => {
-                    target[key] = value;
-                };
-            }
-            if (prop === "get") {
-                return (key: string) => target[key];
-            }
-            if (prop in target) {
-                return target[prop];
-            }
-            return undefined;
-        },
-        set: (target: any, prop: string, value: string) => {
-            if (prop === "set" || prop === "get") {
-                return false;
-            }
-            target[prop] = value;
-            return true;
-        },
-    });
+	env = new Proxy({} as { [key: string]: string }, {
+		get: (target: { [key: string]: string }, prop: string) => {
+			if (prop === "set") {
+				return (key: string, value: string) => {
+					target[key] = value;
+				};
+			}
+			if (prop === "get") {
+				return (key: string) => target[key];
+			}
+			if (prop in target) {
+				return target[prop];
+			}
+			return undefined;
+		},
+		set: (target: any, prop: string, value: string) => {
+			if (prop === "set" || prop === "get") {
+				return false;
+			}
+			target[prop] = value;
+			return true;
+		},
+	});
 
-    #relativeToAbsolute(path: string) {
-        if (path.startsWith("/")) {
-            return path;
-        }
-        return (this.env.PWD + "/" + path).replace(/\/+/g, "/");
-    }
+	#relativeToAbsolute(path: string) {
+		if (path.startsWith("/")) {
+			return path;
+		}
+		return (this.env.PWD + "/" + path).replace(/\/+/g, "/");
+	}
 
-    cat(
-        files: string[],
-        callback: (err: Error | null, contents: string) => void,
-    ) {
-        let contents = "";
-        let remaining = files.length;
-        files.forEach((file) => {
-            anura.fs.readFile(this.#relativeToAbsolute(file), (err, data) => {
-                if (err) {
-                    callback(err, contents);
-                    return;
-                }
-                contents += data.toString() + "\n";
-                remaining--;
-                if (remaining === 0) {
-                    callback(null, contents.replace(/\n$/, ""));
-                }
-            });
-        });
-    }
-    // This differs from the Filer version, because here we can use the anura.files API to open the file
-    // instead of evaluating the contents as js. The behaviour of the Filer version can be replicated by
-    // registering a file provider that evaluates the contents as js.
-    exec(path: string) {
-        anura.files.open(this.#relativeToAbsolute(path));
-    }
-    find(
-        path: string,
-        options?: {
-            /**
-             * Regex to match file paths against
-             */
-            regex?: RegExp;
-            /**
-             * Base name to search for (match patern)
-             */
-            name?: string;
-            /**
-             * Folder to search in (match pattern)
-             */
-            path?: string;
-            /**
-             * Callback to execute on each file.
-             */
-            exec?: (path: string, next: () => void) => void;
-        },
-        callback?: (err: Error | null, files: string[]) => void,
-    ): void;
-    find(
-        path: string,
-        callback?: (err: Error | null, files: string[]) => void,
-    ): void;
-    find(
-        path: string,
-        options?: any,
-        callback?: (err: Error | null, files: string[]) => void,
-    ) {
-        if (typeof options === "function") {
-            callback = options;
-            options = {};
-        }
+	cat(
+		files: string[],
+		callback: (err: Error | null, contents: string) => void,
+	) {
+		let contents = "";
+		let remaining = files.length;
+		files.forEach((file) => {
+			anura.fs.readFile(this.#relativeToAbsolute(file), (err, data) => {
+				if (err) {
+					callback(err, contents);
+					return;
+				}
+				contents += data!.toString() + "\n";
+				remaining--;
+				if (remaining === 0) {
+					callback(null, contents.replace(/\n$/, ""));
+				}
+			});
+		});
+	}
+	// This differs from the Filer version, because here we can use the anura.files API to open the file
+	// instead of evaluating the contents as js. The behaviour of the Filer version can be replicated by
+	// registering a file provider that evaluates the contents as js.
+	exec(path: string) {
+		anura.files.open(this.#relativeToAbsolute(path));
+	}
+	find(
+		path: string,
+		options?: {
+			/**
+			 * Regex to match file paths against
+			 */
+			regex?: RegExp;
+			/**
+			 * Base name to search for (match patern)
+			 */
+			name?: string;
+			/**
+			 * Folder to search in (match pattern)
+			 */
+			path?: string;
+			/**
+			 * Callback to execute on each file.
+			 */
+			exec?: (path: string) => void;
+		},
+		callback?: (err: Error | null, files: string[]) => void,
+	): void;
+	find(
+		path: string,
+		callback?: (err: Error | null, files: string[]) => void,
+	): void;
+	find(
+		path: string,
+		options?: any,
+		callback?: (err: Error | null, files: string[]) => void,
+	) {
+		if (typeof options === "function") {
+			callback = options;
+			options = {};
+		}
 
-        callback ||= () => {};
-        options ||= {};
+		callback ||= () => {};
+		options ||= {};
 
-        function walk(
-            dir: string,
-            done: (err: Error | null, files: string[]) => void,
-        ) {
-            const results: string[] = [];
-            anura.fs.readdir(dir, (err: Error | null, list: string[]) => {
-                if (err) {
-                    done(err, results);
-                    return;
-                }
-                let pending = list.length;
-                if (!pending) {
-                    done(null, results);
-                    return;
-                }
-                list.forEach((file) => {
-                    file = dir + "/" + file;
-                    anura.fs.stat(file, (err, stat) => {
-                        if (err) {
-                            done(err, results);
-                            return;
-                        }
-                        if (stat.isDirectory()) {
-                            walk(file, (err, res) => {
-                                results.push(...res);
-                                pending--;
-                                if (!pending) {
-                                    done(null, results);
-                                }
-                            });
-                        } else {
-                            results.push(file);
-                            pending--;
-                            if (!pending) {
-                                done(null, results);
-                            }
-                        }
-                    });
-                });
-            });
-        }
+		function walk(
+			dir: string,
+			done: (err: Error | null, files: string[]) => void,
+		) {
+			const results: string[] = [];
+			anura.fs.readdir(dir, (err: Error | null, list: string[]) => {
+				if (err) {
+					done(err, results);
+					return;
+				}
+				let pending = list.length;
+				if (!pending) {
+					done(null, results);
+					return;
+				}
+				list.forEach((file) => {
+					file = dir + "/" + file;
+					anura.fs.stat(file, (err, stat) => {
+						if (err) {
+							done(err, results);
+							return;
+						}
+						if (stat.isDirectory()) {
+							walk(file, (err, res) => {
+								results.push(...res);
+								pending--;
+								if (!pending) {
+									done(null, results);
+								}
+							});
+						} else {
+							results.push(file);
+							pending--;
+							if (!pending) {
+								done(null, results);
+							}
+						}
+					});
+				});
+			});
+		}
 
-        walk(this.#relativeToAbsolute(path), (err, results) => {
-            if (err) {
-                callback!(err, []);
-                return;
-            }
-            if (options.regex) {
-                results = results.filter((file) => options.regex!.test(file));
-            }
-            if (options.name) {
-                results = results.filter((file) =>
-                    file.includes(options.name!),
-                );
-            }
-            if (options.path) {
-                results = results.filter((file) =>
-                    file.includes(options.path!),
-                );
-            }
-            if (options.exec) {
-                let remaining = results.length;
-                results.forEach((file) => {
-                    options.exec!(file, () => {
-                        remaining--;
-                        if (remaining === 0) {
-                            callback!(null, results);
-                        }
-                    });
-                });
-            } else {
-                callback!(null, results);
-            }
-        });
-    }
-    ls(
-        dir: string,
-        options?: {
-            recursive?: boolean;
-        },
-        callback?: (err: Error | null, entries: any[]) => void,
-    ): void;
-    ls(
-        dir: string,
-        callback?: (err: Error | null, entries: any[]) => void,
-    ): void;
-    ls(
-        dir: string,
-        options?: any,
-        callback?: (err: Error | null, entries: any[]) => void,
-    ) {
-        if (typeof options === "function") {
-            callback = options;
-            options = {};
-        }
-        callback ||= () => {};
-        options ||= {};
+		walk(this.#relativeToAbsolute(path), (err, results) => {
+			if (err) {
+				callback!(err, []);
+				return;
+			}
+			if (options.regex) {
+				results = results.filter((file) => options.regex!.test(file));
+			}
+			if (options.name) {
+				results = results.filter((file) => file.includes(options.name!));
+			}
+			if (options.path) {
+				results = results.filter((file) => file.includes(options.path!));
+			}
+			if (options.exec) {
+				results.forEach((file) => options.exec!(file));
+			} else {
+				callback!(null, results);
+			}
+		});
+	}
+	ls(
+		dir: string,
+		options?: {
+			recursive?: boolean;
+		},
+		callback?: (err: Error | null, entries: any[]) => void,
+	): void;
+	ls(dir: string, callback?: (err: Error | null, entries: any[]) => void): void;
+	ls(
+		dir: string,
+		options?: any,
+		callback?: (err: Error | null, entries: any[]) => void,
+	) {
+		if (typeof options === "function") {
+			callback = options;
+			options = {};
+		}
+		callback ||= () => {};
+		options ||= {};
 
-        const entries: any[] = [];
+		const entries: any[] = [];
 
-        if (options.recursive) {
-            this.find(
-                dir,
-                {
-                    exec: (path, next = () => {}) => {
-                        entries.push(path);
-                        next();
-                    },
-                },
-                (err, _) => {
-                    if (err) {
-                        callback!(err, []);
-                        return;
-                    }
-                    callback!(null, entries);
-                },
-            );
-        } else {
-            anura.fs.readdir(
-                this.#relativeToAbsolute(dir),
-                (err: Error | null, files: string[]) => {
-                    if (err) {
-                        callback!(err, []);
-                        return;
-                    }
-                    if (files.length === 0) {
-                        callback!(null, []);
-                        return;
-                    }
-                    let pending = files.length;
-                    files.forEach((file) => {
-                        anura.fs.stat(
-                            this.#relativeToAbsolute(dir) + "/" + file,
-                            (err, stats: { isDirectory: () => boolean }) => {
-                                if (err) {
-                                    callback!(err, []);
-                                    return;
-                                }
-                                entries.push(stats);
-                                pending--;
-                                if (!pending) {
-                                    callback!(null, entries);
-                                }
-                            },
-                        );
-                    });
-                },
-            );
-        }
-    }
-    mkdirp(path: string, callback: (err: Error | null) => void) {
-        const parts = this.#relativeToAbsolute(path).split("/");
-        callback ||= () => {};
-        parts.reduce((acc, part) => {
-            acc += "/" + part;
-            anura.fs.mkdir(acc, (err: Error | null) => {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-            });
-            return acc;
-        });
-        callback(null);
-    }
-    rm(
-        path: string,
-        options?: { recursive?: boolean },
-        callback?: (err: Error | null) => void,
-    ): void;
-    rm(path: string, callback?: (err: Error | null) => void): void;
-    rm(path: string, options?: any, callback?: (err: Error | null) => void) {
-        path = this.#relativeToAbsolute(path);
-        if (typeof options === "function") {
-            callback = options;
-            options = {};
-        }
-        callback ||= () => {};
-        options ||= {};
+		if (options.recursive) {
+			this.find(dir, (err, files) => {
+				if (err) {
+					callback!(err, []);
+					return;
+				}
+				callback!(null, files);
+			});
+		} else {
+			anura.fs.readdir(
+				this.#relativeToAbsolute(dir),
+				(err: Error | null, files: string[]) => {
+					if (err) {
+						callback!(err, []);
+						return;
+					}
+					if (files.length === 0) {
+						callback!(null, []);
+						return;
+					}
+					let pending = files.length;
+					files.forEach((file) => {
+						anura.fs.stat(
+							this.#relativeToAbsolute(dir) + "/" + file,
+							(err, stats: { isDirectory: () => boolean }) => {
+								if (err) {
+									callback!(err, []);
+									return;
+								}
+								entries.push(stats);
+								pending--;
+								if (!pending) {
+									callback!(null, entries);
+								}
+							},
+						);
+					});
+				},
+			);
+		}
+	}
+	mkdirp(path: string, callback: (err: Error | null) => void) {
+		this.promises
+			.mkdirp(path)
+			.then(() => callback!(null))
+			.catch((err) => {
+				callback(err);
+			});
+	}
+	rm(
+		path: string,
+		options?: { recursive?: boolean },
+		callback?: (err: Error | null) => void,
+	): void;
+	rm(path: string, callback?: (err: Error | null) => void): void;
+	rm(path: string, options?: any, callback?: (err: Error | null) => void) {
+		path = this.#relativeToAbsolute(path);
+		if (typeof options === "function") {
+			callback = options;
+			options = {};
+		}
+		callback ||= () => {};
+		options ||= {};
 
-        function walk(dir: string, done: (err: Error | null) => void) {
-            anura.fs.readdir(dir, (err: Error | null, list: string[]) => {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                let pending = list.length;
-                if (!pending) {
-                    anura.fs.rmdir(dir, done);
-                    return;
-                }
-                list.forEach((file: string) => {
-                    file = dir + "/" + file;
-                    anura.fs.stat(
-                        file,
-                        (
-                            err,
-                            stats: {
-                                isDirectory: () => boolean;
-                            },
-                        ) => {
-                            if (err) {
-                                done(err);
-                                return;
-                            }
-                            if (stats.isDirectory()) {
-                                walk(file, (err) => {
-                                    if (err) {
-                                        done(err);
-                                        return;
-                                    }
-                                    pending--;
-                                    if (!pending) {
-                                        anura.fs.rmdir(dir, done);
-                                    }
-                                });
-                            } else {
-                                anura.fs.unlink(file, (err) => {
-                                    if (err) {
-                                        done(err);
-                                        return;
-                                    }
-                                    pending--;
-                                    if (!pending) {
-                                        anura.fs.rmdir(dir, done);
-                                    }
-                                });
-                            }
-                        },
-                    );
-                });
-            });
-        }
+		function walk(dir: string, done: (err: Error | null) => void) {
+			anura.fs.readdir(dir, (err: Error | null, list: string[]) => {
+				if (err) {
+					done(err);
+					return;
+				}
+				let pending = list.length;
+				if (!pending) {
+					anura.fs.rmdir(dir, done);
+					return;
+				}
+				list.forEach((file: string) => {
+					file = dir + "/" + file;
+					anura.fs.stat(
+						file,
+						(
+							err,
+							stats: {
+								isDirectory: () => boolean;
+							},
+						) => {
+							if (err) {
+								done(err);
+								return;
+							}
+							if (stats.isDirectory()) {
+								walk(file, (err) => {
+									if (err) {
+										done(err);
+										return;
+									}
+									pending--;
+									if (!pending) {
+										anura.fs.rmdir(dir, done);
+									}
+								});
+							} else {
+								anura.fs.unlink(file, (err) => {
+									if (err) {
+										done(err);
+										return;
+									}
+									pending--;
+									if (!pending) {
+										anura.fs.rmdir(dir, done);
+									}
+								});
+							}
+						},
+					);
+				});
+			});
+		}
 
-        anura.fs.stat(
-            path,
-            (err: Error | null, stats: { isDirectory: () => boolean }) => {
-                if (err) {
-                    callback!(err);
-                    return;
-                }
-                if (!stats.isDirectory()) {
-                    anura.fs.unlink(path, callback);
-                    return;
-                }
+		anura.fs.stat(
+			path,
+			(err: Error | null, stats: { isDirectory: () => boolean }) => {
+				if (err) {
+					callback!(err);
+					return;
+				}
+				if (!stats.isDirectory()) {
+					anura.fs.unlink(path, callback);
+					return;
+				}
 
-                if (options.recursive) {
-                    walk(path, callback!);
-                } else {
-                    anura.fs.readdir(
-                        path,
-                        (err: Error | null, files: string[]) => {
-                            if (err) {
-                                callback!(err);
-                                return;
-                            }
-                            if (files.length > 0) {
-                                callback!(
-                                    new Error(
-                                        "Directory not empty! Pass { recursive: true } instead to remove it and all its contents.",
-                                    ),
-                                );
-                                return;
-                            }
-                        },
-                    );
-                }
-            },
-        );
-    }
-    tempDir(callback?: (err: Error | null, path: string) => void) {
-        callback ||= () => {};
-        const tmp = this.env.TMP;
-        anura.fs.mkdir(tmp, () => {
-            callback!(null, tmp);
-        });
-    }
-    touch(
-        path: string,
-        options?: { updateOnly?: boolean; date?: Date },
-        callback?: (err: Error | null) => void,
-    ): void;
-    touch(path: string, callback?: (err: Error | null) => void): void;
-    touch(path: string, options?: any, callback?: (err: Error | null) => void) {
-        path = this.#relativeToAbsolute(path);
-        if (typeof options === "function") {
-            callback = options;
-            options = {
-                updateOnly: false,
-                date: Date.now(),
-            };
-        }
-        callback ||= () => {};
-        options ||= {
-            updateOnly: false,
-            date: Date.now(),
-        };
+				if (options.recursive) {
+					walk(path, callback!);
+				} else {
+					anura.fs.readdir(path, (err: Error | null, files: string[]) => {
+						if (err) {
+							callback!(err);
+							return;
+						}
+						if (files.length > 0) {
+							callback!(
+								new Error(
+									"Directory not empty! Pass { recursive: true } instead to remove it and all its contents.",
+								),
+							);
+							return;
+						}
+					});
+				}
+			},
+		);
+	}
+	tempDir(callback?: (err: Error | null, path: string) => void) {
+		callback ||= () => {};
+		const tmp = this.env.TMP;
+		anura.fs.mkdir(tmp, () => {
+			callback!(null, tmp);
+		});
+	}
+	touch(
+		path: string,
+		options?: { updateOnly?: boolean; date?: Date },
+		callback?: (err: Error | null) => void,
+	): void;
+	touch(path: string, callback?: (err: Error | null) => void): void;
+	touch(path: string, options?: any, callback?: (err: Error | null) => void) {
+		path = this.#relativeToAbsolute(path);
+		if (typeof options === "function") {
+			callback = options;
+			options = {
+				updateOnly: false,
+				date: Date.now(),
+			};
+		}
+		callback ||= () => {};
+		options ||= {
+			updateOnly: false,
+			date: Date.now(),
+		};
 
-        function createFile() {
-            anura.fs.writeFile(path, "", callback);
-        }
+		function createFile() {
+			anura.fs.writeFile(path, "", callback);
+		}
 
-        function updateTimes() {
-            anura.fs.utimes(path, options.date, options.date, callback);
-        }
+		function updateTimes() {
+			anura.fs.utimes(path, options.date, options.date, callback);
+		}
 
-        anura.fs.stat(path, (err: Error | null) => {
-            if (err) {
-                if (options.updateOnly) {
-                    callback!(
-                        new Error("File does not exist and updateOnly is true"),
-                    );
-                    return;
-                } else {
-                    createFile();
-                }
-            } else {
-                updateTimes();
-            }
-        });
-    }
+		anura.fs.stat(path, (err: Error | null) => {
+			if (err) {
+				if (options.updateOnly) {
+					callback!(new Error("File does not exist and updateOnly is true"));
+					return;
+				} else {
+					createFile();
+				}
+			} else {
+				updateTimes();
+			}
+		});
+	}
 
-    cd(dir: string) {
-        this.env.PWD = this.#relativeToAbsolute(dir);
-    }
+	cd(dir: string) {
+		this.env.PWD = this.#relativeToAbsolute(dir);
+	}
 
-    pwd() {
-        return this.env.PWD;
-    }
+	pwd() {
+		return this.env.PWD;
+	}
 
-    promises = {
-        cat: async (files: string[]) => {
-            let contents = "";
-            for (const file of files) {
-                contents += (
-                    await anura.fs.promises.readFile(
-                        this.#relativeToAbsolute(file),
-                    )
-                ).toString();
-            }
-            return contents;
-        },
-        exec: async (path: string) => {
-            anura.files.open(this.#relativeToAbsolute(path));
-        },
-        find: (
-            path: string,
-            options?: {
-                regex?: RegExp;
-                name?: string;
-                path?: string;
-                exec?: (path: string, next: () => void) => void;
-            },
-        ) => {
-            return new Promise<string[]>((resolve, reject) => {
-                this.find(path, options, (err, files) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(files);
-                });
-            });
-        },
-        ls: (
-            dir: string,
-            options?: {
-                recursive?: boolean;
-            },
-        ) => {
-            return new Promise<string[]>((resolve, reject) => {
-                this.ls(dir, options, (err, entries) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(entries);
-                });
-            });
-        },
-        mkdirp: (path: string) => {
-            return new Promise<void>((resolve, reject) => {
-                this.mkdirp(path, (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve();
-                });
-            });
-        },
-        rm: (
-            path: string,
-            options?: {
-                recursive?: boolean;
-            },
-        ) => {
-            return new Promise<void>((resolve, reject) => {
-                this.rm(path, options, (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve();
-                });
-            });
-        },
-        touch: (
-            path: string,
-            options?: {
-                updateOnly?: boolean;
-                date?: Date;
-            },
-        ) => {
-            return new Promise<void>((resolve, reject) => {
-                this.touch(path, options, (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve();
-                });
-            });
-        },
-    };
+	promises = {
+		cat: async (files: string[]) => {
+			let contents = "";
+			for (const file of files) {
+				contents += (
+					await anura.fs.promises.readFile(this.#relativeToAbsolute(file))
+				).toString();
+			}
+			return contents;
+		},
+		exec: async (path: string) => {
+			anura.files.open(this.#relativeToAbsolute(path));
+		},
+		find: (
+			path: string,
+			options?: {
+				regex?: RegExp;
+				name?: string;
+				path?: string;
+				exec?: (path: string) => void;
+			},
+		) => {
+			return new Promise<string[]>((resolve, reject) => {
+				this.find(path, options, (err, files) => {
+					if (err) {
+						reject(err);
+						return;
+					}
+					resolve(files);
+				});
+			});
+		},
+		ls: (
+			dir: string,
+			options?: {
+				recursive?: boolean;
+			},
+		) => {
+			return new Promise<string[]>((resolve, reject) => {
+				this.ls(dir, options, (err, entries) => {
+					if (err) {
+						reject(err);
+						return;
+					}
+					resolve(entries);
+				});
+			});
+		},
+		cpr: async (src: string, dest: string, options?: any) => {
+			try {
+				const stat = await anura.fs.promises.stat(src);
+				if (options?.createInnerFolder === true) {
+					try {
+						const destStat = await anura.fs.promises.stat(dest);
+						if (destStat.type === "DIRECTORY") {
+							dest = Filer.Path.join(dest, Filer.Path.basename(src));
+						}
+					} catch {
+						// Destination does not exist; continue as-is
+					}
+				}
 
-    constructor(options?: { env?: { [key: string]: string } }) {
-        options ||= {
-            env: {
-                PWD: "/",
-                TMP: "/tmp",
-            },
-        };
-        if (options?.env) {
-            Object.entries(options.env).forEach(([key, value]) => {
-                this.env.set(key, value);
-            });
-        }
-    }
+				if (stat.type === "FILE") {
+					// Make sure destination directory exists
+					const destDir = Filer.Path.dirname(dest);
+
+					await this.promises.mkdirp(destDir);
+					await anura.fs.promises.writeFile(
+						dest,
+						await anura.fs.promises.readFile(src),
+					);
+				} else if (stat.type === "DIRECTORY") {
+					await this.promises.mkdirp(dest);
+
+					const items = await anura.fs.promises.readdir(src);
+					for (const item of items) {
+						const srcPath = Filer.Path.join(src, item);
+						const destPath = Filer.Path.join(dest, item);
+						await this.promises.cpr(srcPath, destPath);
+					}
+				} else {
+					throw new Error(`Unsupported file type at path: ${src}`);
+				}
+			} catch (err) {
+				console.error(`Error copying from ${src} to ${dest}:`, err);
+				throw err;
+			}
+		},
+		mkdirp: async (path: string) => {
+			const parts = this.#relativeToAbsolute(path).split("/");
+			let builder = "";
+			for (const part of parts) {
+				if (part === "") continue;
+				builder += "/" + part;
+				try {
+					await anura.fs.promises.mkdir(builder);
+				} catch (e) {
+					if (e.code !== "EEXIST") throw e;
+				}
+			}
+		},
+		rm: (
+			path: string,
+			options?: {
+				recursive?: boolean;
+			},
+		) => {
+			return new Promise<void>((resolve, reject) => {
+				this.rm(path, options, (err) => {
+					if (err) {
+						reject(err);
+						return;
+					}
+					resolve();
+				});
+			});
+		},
+		touch: (
+			path: string,
+			options?: {
+				updateOnly?: boolean;
+				date?: Date;
+			},
+		) => {
+			return new Promise<void>((resolve, reject) => {
+				this.touch(path, options, (err) => {
+					if (err) {
+						reject(err);
+						return;
+					}
+					resolve();
+				});
+			});
+		},
+	};
+
+	constructor(options?: { env?: { [key: string]: string } }) {
+		options ||= {
+			env: {
+				PWD: "/",
+				TMP: "/tmp",
+			},
+		};
+		if (options?.env) {
+			Object.entries(options.env).forEach(([key, value]) => {
+				this.env.set(key, value);
+			});
+		}
+	}
 }
 
 /**
@@ -916,361 +636,601 @@ class AFSShell {
  * at arbitrary paths.
  */
 class AnuraFilesystem implements AnuraFSOperations<any> {
-    providers: Map<string, AFSProvider<any>> = new Map();
-    providerCache: { [path: string]: AFSProvider<any> } = {};
+	providers: Map<string, AFSProvider<any>> = new Map();
+	fds: any = {};
+	lastFd: 3;
+	providerCache: { [path: string]: AFSProvider<any> } = {};
+	whatwgfs = {
+		fs: undefined,
+		getFolder: async () => {
+			// @ts-ignore
+			return await this.whatwgfs.fs.getOriginPrivateDirectory(
+				// @ts-ignore
+				import("/libs/nfsadapter/adapters/anuraadapter.js"),
+			);
+		},
+		fileOrDirectoryFromPath: async (path: string) => {
+			try {
+				return await this.whatwgfs.directoryHandleFromPath(path);
+			} catch (e1) {
+				try {
+					return await this.whatwgfs.fileHandleFromPath(path);
+				} catch (e2) {
+					throw e1 + e2;
+				}
+			}
+		},
+		directoryHandleFromPath: async (path: string) => {
+			const pathParts = path.split("/");
+			// prettier-ignore
+			let workingPath = (await anura.fs.whatwgfs.getFolder());
+			for (const dir of pathParts) {
+				if (dir !== "") workingPath = await workingPath.getDirectoryHandle(dir);
+			}
+			return workingPath;
+		},
+		fileHandleFromPath: async (givenPath: string) => {
+			let path: string | string[] = givenPath.split("/");
+			const file = path.pop();
+			path = path.join("/");
 
-    // Note: Intentionally aliasing the property to a class instead of an instance
-    static Shell = AFSShell;
-    Shell = AFSShell;
+			// prettier-ignore
+			const workingPath = (await anura.fs.whatwgfs.directoryHandleFromPath(path));
+			return await workingPath.getFileHandle(file);
+		},
+		showDirectoryPicker: async (options: object) => {
+			const picker = await anura.import("anura.filepicker");
+			const path = await picker.selectFolder();
+			return await this.whatwgfs.directoryHandleFromPath(path);
+		},
+		showOpenFilePicker: async (options: object) => {
+			const picker = await anura.import("anura.filepicker");
+			const path = await picker.selectFile();
+			return await this.whatwgfs.fileHandleFromPath(path);
+		},
+	};
 
-    constructor(providers: AFSProvider<any>[]) {
-        providers.forEach((provider) => {
-            this.providers.set(provider.domain, provider);
-        });
-    }
+	// Note: Intentionally aliasing the property to a class instead of an instance
+	static Shell = AFSShell;
+	Shell = AFSShell;
 
-    clearCache() {
-        this.providerCache = {};
-    }
+	constructor(providers: AFSProvider<any>[]) {
+		providers.forEach((provider) => {
+			this.providers.set(provider.domain, provider);
+		});
+		// These paths must be TS ignore'd since they are in build/
 
-    installProvider(provider: AFSProvider<any>) {
-        this.providers.set(provider.domain, provider);
-        this.clearCache();
-    }
+		(async () => {
+			// @ts-ignore
+			const fs = await import("/libs/nfsadapter/nfsadapter.js");
+			// @ts-ignore
+			this.whatwgfs.FileSystemDirectoryHandle = fs.FileSystemDirectoryHandle;
+			// @ts-ignore
+			this.whatwgfs.FileSystemFileHandle = fs.FileSystemFileHandle;
+			// @ts-ignore
+			this.whatwgfs.FileSystemHandle = fs.FileSystemHandle;
+			this.whatwgfs.fs = fs;
+		})();
+	}
 
-    processPath(path: string): AFSProvider<any> {
-        if (!path.startsWith("/")) {
-            throw new Error("Path must be absolute");
-        }
-        path = path.replace(/^\/+/, "/");
+	clearCache() {
+		this.providerCache = {};
+	}
 
-        let provider = this.providerCache[path];
-        if (provider) {
-            return provider;
-        }
-        if (this.providers.has(path)) {
-            path += "/";
-        }
-        const parts = path.split("/");
-        parts.shift();
-        parts.pop();
-        while (!provider && parts.length > 0) {
-            const checkPath = "/" + parts.join("/");
-            provider = this.providers.get(checkPath);
-            parts.pop();
-        }
-        if (!provider) {
-            provider = this.providers.get("/");
-        }
-        this.providerCache[path] = provider!;
-        return provider!;
-    }
+	installProvider(provider: AFSProvider<any>) {
+		this.providers.set(provider.domain, provider);
+		this.clearCache();
+	}
 
-    processFD(fd: AnuraFD): AFSProvider<any> {
-        return this.processPath(fd[AnuraFDSymbol]);
-    }
+	processPath(path: string): AFSProvider<any> {
+		if (!path.startsWith("/")) {
+			throw new Error("Path must be absolute");
+		}
+		path = path.replace(/^\/+/, "/");
 
-    rename(
-        oldPath: string,
-        newPath: string,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(oldPath).rename(oldPath, newPath, callback);
-    }
+		let provider = this.providerCache[path];
+		if (provider) {
+			return provider;
+		}
+		if (this.providers.has(path)) {
+			path += "/";
+		}
+		const parts = path.split("/");
+		parts.shift();
+		parts.pop();
+		while (!provider && parts.length > 0) {
+			const checkPath = "/" + parts.join("/");
+			provider = this.providers.get(checkPath);
+			parts.pop();
+		}
+		if (!provider) {
+			provider = this.providers.get("/");
+		}
+		this.providerCache[path] = provider!;
+		return provider!;
+	}
 
-    ftruncate(
-        fd: AnuraFD,
-        len: number,
-        callback?: (err: Error | null, fd: AnuraFD) => void,
-    ) {
-        this.processFD(fd).ftruncate(fd, len, callback);
-    }
+	rename(
+		oldPath: string,
+		newPath: string,
+		callback?: (err: Error | null) => void,
+	) {
+		this.promises
+			.rename(oldPath, newPath)
+			.then(() => callback!(null))
+			.catch(callback);
+	}
 
-    truncate(
-        path: string,
-        len: number,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(path).truncate(path, len, callback);
-    }
+	ftruncate(fd: number, len: number, callback?: (err: Error | null) => void) {
+		anura.fs.truncate(this.fds[fd].path, len, callback);
+	}
 
-    stat(path: string, callback?: (err: Error | null, stats: any) => void) {
-        this.processPath(path).stat(path, callback);
-    }
+	truncate(path: string, len: number, callback?: (err: Error | null) => void) {
+		this.promises
+			.truncate(path, len)
+			.then(() => callback!(null))
+			.catch(callback);
+	}
 
-    fstat(
-        fd: AnuraFD,
-        callback?: ((err: Error | null, stats: any) => void) | undefined,
-    ): void {
-        this.processFD(fd).fstat(fd, callback);
-    }
+	stat(path: string, callback?: (err: Error | null, stats: any) => void) {
+		this.promises
+			.stat(path)
+			.then((res) => {
+				callback!(null, res);
+			})
+			.catch((err) => {
+				callback!(err, null);
+			});
+	}
 
-    lstat(path: string, callback?: (err: Error | null, stats: any) => void) {
-        this.processPath(path).lstat(path, callback);
-    }
+	fstat(
+		fd: number,
+		callback?: ((err: Error | null, stats: any) => void) | undefined,
+	): void {
+		anura.fs.stat(this.fds[fd].path, callback);
+	}
 
-    /** @deprecated fs.exists() is an anachronism and exists only for historical reasons. */
-    exists(path: string, callback?: (exists: boolean) => void) {
-        this.processPath(path).exists(path, callback);
-    }
+	lstat(path: string, callback?: (err: Error | null, stats: any) => void) {
+		this.promises
+			.lstat(path)
+			.then((res) => {
+				callback!(null, res);
+			})
+			.catch((err) => {
+				callback!(err, null);
+			});
+	}
 
-    link(
-        srcPath: string,
-        dstPath: string,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(srcPath).link(srcPath, dstPath, callback);
-    }
+	/** @deprecated fs.exists() is an anachronism and exists only for historical reasons. */
+	async exists(path: string, callback?: (exists: boolean) => void) {
+		try {
+			await anura.fs.promises.access(path);
+			callback!(true);
+		} catch (e) {
+			callback!(false);
+		}
+	}
 
-    symlink(path: string, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processPath(path).symlink(path, ...rest);
-    }
+	link(
+		srcPath: string,
+		dstPath: string,
+		callback?: (err: Error | null) => void,
+	) {
+		this.promises
+			.link(srcPath, dstPath)
+			.then((res) => {
+				callback!(null);
+			})
+			.catch((err) => {
+				callback!(err);
+			});
+	}
 
-    readlink(
-        path: string,
-        callback?: (err: Error | null, linkContents: string) => void,
-    ) {
-        this.processPath(path).readlink(path, callback);
-    }
+	symlink(path: string, ...rest: any[]) {
+		// @ts-ignore - Overloaded methods are scary
+		this.processPath(rest[0]).symlink(path, ...rest);
+	}
 
-    unlink(path: string, callback?: (err: Error | null) => void) {
-        this.processPath(path).unlink(path, callback);
-    }
+	readlink(
+		path: string,
+		callback?: (err: Error | null, linkContents: string | undefined) => void,
+	) {
+		this.promises
+			.readlink(path)
+			.then((res) => {
+				callback!(null, res);
+			})
+			.catch((err) => {
+				callback!(err, undefined);
+			});
+	}
 
-    mknod(path: string, mode: number, callback?: (err: Error | null) => void) {
-        this.processPath(path).mknod(path, mode, callback);
-    }
+	unlink(path: string, callback?: (err: Error | null) => void) {
+		this.promises
+			.unlink(path)
+			.then((res) => {
+				callback!(null);
+			})
+			.catch((err) => {
+				callback!(err);
+			});
+	}
 
-    rmdir(path: string, callback?: (err: Error | null) => void) {
-        this.processPath(path).rmdir(path, callback);
-    }
+	rmdir(path: string, callback?: (err: Error | null) => void) {
+		this.promises
+			.rmdir(path)
+			.then((res) => {
+				callback!(null);
+			})
+			.catch((err) => {
+				callback!(err);
+			});
+	}
 
-    mkdir(path: string, ...rest: any[]) {
-        this.processPath(path).mkdir(path, ...rest);
-    }
+	mkdir(path: string, ...rest: any[]) {
+		this.promises
+			.mkdir(path)
+			.then((res) => {
+				rest[rest.length - 1]!(null);
+			})
+			.catch((err) => {
+				rest[rest.length - 1]!(err);
+			});
+	}
 
-    access(path: string, ...rest: any[]) {
-        this.processPath(path).access(path, ...rest);
-    }
+	access(path: string, ...rest: any[]) {
+		this.promises
+			.access(path)
+			.then((res) => {
+				rest[rest.length - 1]!(null);
+			})
+			.catch((err) => {
+				rest[rest.length - 1]!(err);
+			});
+	}
 
-    mkdtemp(...args: any[]) {
-        // Temp directories should remain in the root filesystem for now
-        // @ts-ignore - Overloaded methods are scary
-        this.providers.get("/")!.mkdtemp(...args);
-    }
+	mkdtemp(...args: any[]) {
+		// Temp directories should remain in the root filesystem for now
+		// @ts-ignore - Overloaded methods are scary
+		this.processPath(path).mkdtemp(...args);
+	}
 
-    readdir(path: string, ...rest: any[]) {
-        this.processPath(path).readdir(path, ...rest);
-    }
+	readdir(path: string, ...rest: any[]) {
+		this.promises
+			.readdir(path, typeof rest[0] !== "function" ? rest[0] : undefined)
+			.then((res) => {
+				rest[rest.length - 1]!(null, res);
+			})
+			.catch((err) => {
+				rest[rest.length - 1]!(err);
+			});
+	}
 
-    close(
-        fd: AnuraFD,
-        callback?: ((err: Error | null) => void) | undefined,
-    ): void {
-        this.processFD(fd).close(fd, callback);
-    }
+	close(
+		fd: number,
+		callback?: ((err: Error | null) => void) | undefined,
+	): void {
+		try {
+			delete this.fds[fd];
+			if (callback) callback(null);
+		} catch (e) {
+			if (callback) callback(e);
+		}
+		// this.processFD(fd).close(fd, callback);
+	}
 
-    open(
-        path: string,
-        flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-        mode: number,
-        callback?: ((err: Error | null, fd: AnuraFD) => void) | undefined,
-    ): void;
-    open(
-        path: string,
-        flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-        callback?: ((err: Error | null, fd: AnuraFD) => void) | undefined,
-    ): void;
-    open(
-        path: string,
-        flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-        mode?: unknown,
-        callback?: unknown,
-    ): void {
-        if (typeof mode === "number") {
-            this.processPath(path as string).open(
-                path,
-                flags,
-                mode as number,
-                callback as (err: Error | null, fd: AnuraFD) => void,
-            );
-        } else {
-            this.processPath(path as string).open(
-                path,
-                flags,
-                mode as (err: Error | null, fd: AnuraFD) => void,
-            );
-        }
-    }
+	open(
+		path: string,
+		flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
+		mode: number,
+		callback?: ((err: Error | null, fd: number) => void) | undefined,
+	): void;
+	open(
+		path: string,
+		flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
+		callback?: ((err: Error | null, fd: number) => void) | undefined,
+	): void;
+	open(
+		path: string,
+		flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
+		mode?: unknown,
+		callback?: unknown,
+	): void {
+		let definedMode: number = 0o644;
+		let definedCallback: any;
+		let definedFlags: string = "w+";
+		if (typeof flags !== "number" && typeof flags !== "string") {
+			definedCallback = flags;
+		} else {
+			if (typeof mode === "number") {
+				definedFlags = flags;
+				definedCallback = callback;
+				definedMode = mode;
+			} else {
+				definedCallback = mode;
+				definedFlags = flags;
+			}
+		}
+		// @ts-ignore
+		this.promises
+			.open(path, definedFlags as any, definedMode)
+			.then((res) => definedCallback(null, res))
+			.catch((e) => definedCallback(e, null));
+	}
 
-    utimes(
-        path: string,
-        atime: number | Date,
-        mtime: number | Date,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(path).utimes(path, atime, mtime, callback);
-    }
+	utimes(
+		path: string,
+		atime: number | Date,
+		mtime: number | Date,
+		callback?: (err: Error | null) => void,
+	) {
+		this.promises
+			.utimes(path, atime, mtime)
+			.then((res) => {
+				callback!(null);
+			})
+			.catch((err) => {
+				callback!(err);
+			});
+	}
 
-    futimes(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).futimes(fd, ...rest);
-    }
+	futimes(fd: number, ...rest: any[]) {
+		// @ts-ignore - Overloaded methods are scary
+		anura.fs.utimes(this.fds[fd].path, ...rest);
+	}
 
-    chown(
-        path: string,
-        uid: number,
-        gid: number,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(path).chown(path, uid, gid, callback);
-    }
+	chown(
+		path: string,
+		uid: number,
+		gid: number,
+		callback?: (err: Error | null) => void,
+	) {
+		this.promises
+			.chown(path, uid, gid)
+			.then((res) => {
+				callback!(null);
+			})
+			.catch((err) => {
+				callback!(err);
+			});
+	}
 
-    fchown(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).fchown(fd, ...rest);
-    }
+	fchown(fd: number, ...rest: any[]) {
+		// @ts-ignore - Overloaded methods are scary
+		anura.fs.chown(this.fds[fd].path, ...rest);
+	}
 
-    chmod(path: string, mode: number, callback?: (err: Error | null) => void) {
-        this.processPath(path).chmod(path, mode, callback);
-    }
+	chmod(path: string, mode: number, callback?: (err: Error | null) => void) {
+		this.promises
+			.chmod(path, mode)
+			.then(() => callback!(null))
+			.catch(callback);
+	}
 
-    fchmod(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).fchmod(fd, ...rest);
-    }
+	fchmod(fd: number, ...rest: any[]) {
+		// @ts-ignore - Overloaded methods are scary
+		anura.fs.chmod(this.fds[fd].path, ...rest);
+	}
 
-    fsync(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).fsync(fd, ...rest);
-    }
+	fsync(fd: number, ...rest: any[]) {
+		// @ts-ignore - Overloaded methods are scary
+		rest[0]();
+	}
 
-    write(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).write(fd, ...rest);
-    }
+	async write(fd: number, ...rest: any[]) {
+		const callback = rest[rest.length - 1];
+		try {
+			// @ts-ignore
+			const realPath = this.fds[fd].path;
+			const buffer = rest[0];
+			const callback = rest[rest.length - 1];
+			let length = buffer.length;
+			let offset = 0;
+			let position = null;
 
-    read(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).read(fd, ...rest);
-    }
+			// VarArgs handler
+			if (rest.length === 5) {
+				offset = rest[1];
+				length = rest[2];
+				position = rest[3];
+			} else if (rest.length === 4) {
+				offset = rest[1];
+				length = rest[2];
+			} else if (rest.length === 3) {
+				offset = rest[1];
+			}
 
-    readFile(
-        path: string,
-        callback?: (err: Error | null, data: Uint8Array) => void,
-    ) {
-        this.processPath(path).readFile(path, callback);
-    }
+			let fileBuf = Filer.Buffer.from(new Uint8Array(0));
+			try {
+				fileBuf = Filer.Buffer.from(
+					(await anura.fs.promises.readFile(
+						realPath,
+					)) as Uint8Array<ArrayBuffer>,
+				);
+			} catch {
+				// File just didn't exist, not a huge deal, it will exist by the end of this
+			}
+			const slice = buffer.slice(offset, offset + length);
+			let outBuf;
+			if (position === null) {
+				outBuf = Filer.Buffer.concat([fileBuf, slice]);
+			} else {
+				const endPos = position + slice.length;
+				if (endPos > fileBuf.length) {
+					outBuf = Filer.Buffer.alloc(endPos);
+					fileBuf.copy(outBuf, 0, 0, fileBuf.length);
+				} else {
+					outBuf = Filer.Buffer.from(fileBuf);
+				}
+				slice.copy(outBuf, position);
+			}
+			await anura.fs.promises.writeFile(realPath, outBuf);
+			callback(null, length, buffer);
+		} catch (e) {
+			callback(e);
+		}
+	}
 
-    writeFile(path: string, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processPath(path).writeFile(path, ...rest);
-    }
+	async read(fd: number, ...rest: any[]) {
+		const callback = rest[rest.length - 1];
+		try {
+			// @ts-ignore
+			const realPath = this.fds[fd].path;
+			const buffer = rest[0];
 
-    appendFile(
-        path: string,
-        data: Uint8Array,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(path).appendFile(path, data, callback);
-    }
+			let length = buffer.length;
+			let offset = 0;
+			let position = 0;
+			// VarArgs handler
+			if (rest.length === 5) {
+				offset = rest[1];
+				length = rest[2];
+				position = rest[3];
+			} else if (rest.length === 4) {
+				offset = rest[1];
+				length = rest[2];
+			} else if (rest.length === 3) {
+				offset = rest[1];
+			}
 
-    setxattr(path: string, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processPath(path).setxattr(path, ...rest);
-    }
+			const fileBuf = await anura.fs.promises.readFile(realPath);
+			const slice = Filer.Buffer.from(
+				fileBuf.slice(position, position + length),
+			);
+			slice.copy(buffer, offset);
+			callback(null, slice.length, buffer);
+		} catch (e) {
+			callback(e);
+		}
+	}
 
-    fsetxattr(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).fsetxattr(fd, ...rest);
-    }
+	readFile(
+		path: string,
+		callback?: (err: Error | null, data?: Uint8Array) => void,
+	) {
+		this.promises
+			.readFile(path)
+			.then((res) => {
+				callback!(null, res);
+			})
+			.catch((err) => {
+				callback!(err);
+			});
+	}
 
-    getxattr(
-        path: string,
-        name: string,
-        callback?: (err: Error | null, value: string | object) => void,
-    ) {
-        this.processPath(path).getxattr(path, name, callback);
-    }
+	writeFile(path: string, data: Uint8Array | string, ...rest: any[]) {
+		if (data instanceof Uint8Array && !(data instanceof Filer.Buffer)) {
+			data = Filer.Buffer.from(data);
+		}
+		this.promises
+			.writeFile(
+				path,
+				data,
+				typeof rest[0] !== "function" ? rest[0] : undefined,
+			)
+			.then((res) => {
+				if (typeof rest[rest.length - 1] === "function")
+					rest[rest.length - 1]!(null, res);
+			})
+			.catch((err) => {
+				if (typeof rest[rest.length - 1] === "function")
+					rest[rest.length - 1]!(err);
+			});
+	}
 
-    fgetxattr(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).fgetxattr(fd, ...rest);
-    }
+	appendFile(path: string, data: Uint8Array, ...rest: any[]) {
+		if (data instanceof Uint8Array && !(data instanceof Filer.Buffer)) {
+			data = Filer.Buffer.from(data);
+		}
+		this.promises
+			.appendFile(
+				path,
+				data,
+				typeof rest[0] !== "function" ? rest[0] : undefined,
+			)
+			.then((res) => {
+				if (typeof rest[rest.length - 1] === "function")
+					rest[rest.length - 1]!(null, res);
+			})
+			.catch((err) => {
+				if (typeof rest[rest.length - 1] === "function")
+					rest[rest.length - 1]!(err);
+			});
+	}
 
-    removexattr(
-        path: string,
-        name: string,
-        callback?: (err: Error | null) => void,
-    ) {
-        this.processPath(path).removexattr(path, name, callback);
-    }
+	// @ts-ignore - This is still being implemented.
+	promises = {
+		appendFile: (
+			path: string,
+			data: Uint8Array,
+			options: { encoding: string; mode: number; flag: string },
+		) => {
+			if (data instanceof Uint8Array && !(data instanceof Filer.Buffer)) {
+				data = Filer.Buffer.from(data);
+			}
 
-    fremovexattr(fd: AnuraFD, ...rest: any[]) {
-        // @ts-ignore - Overloaded methods are scary
-        this.processFD(fd).fremovexattr(fd, ...rest);
-    }
-    // @ts-ignore - This is still being implemented.
-    promises = {
-        appendFile: (
-            path: string,
-            data: Uint8Array,
-            options: { encoding: string; mode: number; flag: string },
-        ) => this.processPath(path).promises.appendFile(path, data, options),
-        access: (path: string, mode?: number) =>
-            this.processPath(path).promises.access(path, mode),
-        chown: (path: string, uid: number, gid: number) =>
-            this.processPath(path).promises.chown(path, uid, gid),
-        chmod: (path: string, mode: number) =>
-            this.processPath(path).promises.chmod(path, mode),
-        getxattr: (path: string, name: string) =>
-            this.processPath(path).promises.getxattr(path, name),
-        link: (srcPath: string, dstPath: string) =>
-            this.processPath(srcPath).promises.link(srcPath, dstPath),
-        lstat: (path: string) => this.processPath(path).promises.lstat(path),
-        mkdir: (path: string, mode?: number) =>
-            this.processPath(path).promises.mkdir(path, mode),
-        mkdtemp: (prefix: string, options?: { encoding: string }) =>
-            this.providers.get("/")!.promises.mkdtemp(prefix, options),
-        mknod: (path: string, mode: number) =>
-            this.processPath(path).promises.mknod(path, mode),
-        open: async (
-            path: string,
-            flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
-            mode?: number,
-        ) => this.processPath(path).promises.open(path, flags, mode),
-        readdir: (
-            path: string,
-            options?: string | { encoding: string; withFileTypes: boolean },
-        ) => this.processPath(path).promises.readdir(path, options),
-        readFile: (path: string) =>
-            this.processPath(path).promises.readFile(path),
-        readlink: (path: string) =>
-            this.processPath(path).promises.readlink(path),
-        removexattr: (path: string, name: string) =>
-            this.processPath(path).promises.removexattr(path, name),
-        rename: (oldPath: string, newPath: string) =>
-            this.processPath(oldPath).promises.rename(oldPath, newPath),
-        rmdir: (path: string) => this.processPath(path).promises.rmdir(path),
-        setxattr: (
-            path: string,
-            name: string,
-            value: string | object,
-            flag?: "CREATE" | "REPLACE",
-        ) => this.processPath(path).promises.setxattr(path, name, value, flag),
-        stat: (path: string) => this.processPath(path).promises.stat(path),
-        symlink: (srcPath: string, dstPath: string, type?: string) =>
-            this.processPath(srcPath).promises.symlink(srcPath, dstPath, type),
-        truncate: (path: string, len: number) =>
-            this.processPath(path).promises.truncate(path, len),
-        unlink: (path: string) => this.processPath(path).promises.unlink(path),
-        utimes: (path: string, atime: number | Date, mtime: number | Date) =>
-            this.processPath(path).promises.utimes(path, atime, mtime),
-        writeFile: (
-            path: string,
-            data: Uint8Array | string,
-            options?: { encoding: string; mode: number; flag: string },
-        ) => this.processPath(path).promises.writeFile(path, data, options),
-    };
+			return this.processPath(path).promises.appendFile(path, data, options);
+		},
+		access: (path: string, mode?: number) =>
+			this.processPath(path).promises.access(path, mode),
+		chown: (path: string, uid: number, gid: number) =>
+			this.processPath(path).promises.chown(path, uid, gid),
+		chmod: (path: string, mode: number) =>
+			this.processPath(path).promises.chmod(path, mode),
+		link: (srcPath: string, dstPath: string) =>
+			this.processPath(srcPath).promises.link(srcPath, dstPath),
+		lstat: (path: string) => this.processPath(path).promises.lstat(path),
+		mkdir: (path: string, mode?: number) =>
+			this.processPath(path).promises.mkdir(path, mode),
+		mkdtemp: (prefix: string, options?: { encoding: string }) =>
+			this.processPath(prefix).promises.mkdtemp(prefix, options),
+		open: async (
+			path: string,
+			flags: "r" | "r+" | "w" | "w+" | "a" | "a+",
+			mode?: number,
+		) => {
+			let definedMode;
+			if (typeof mode === "number") {
+				definedMode = mode;
+			} else {
+				definedMode = 0o644;
+			}
+
+			if (["a", "a+", "w", "w+"].includes(flags)) {
+				anura.fs.promises.writeFile(path, "");
+			}
+
+			const assignedFd = this.lastFd++;
+			this.fds[assignedFd] = { path: path.replace(/^\/+/, "/") };
+			return assignedFd;
+		},
+		readdir: (
+			path: string,
+			options?: string | { encoding: string; withFileTypes: boolean },
+		) => this.processPath(path).promises.readdir(path, options),
+		readFile: (path: string) => this.processPath(path).promises.readFile(path),
+		readlink: (path: string) => this.processPath(path).promises.readlink(path),
+		rename: (oldPath: string, newPath: string) =>
+			this.processPath(oldPath).promises.rename(oldPath, newPath),
+		rmdir: (path: string) => this.processPath(path).promises.rmdir(path),
+		stat: (path: string) => this.processPath(path).promises.stat(path),
+		symlink: (srcPath: string, dstPath: string, type?: string) =>
+			this.processPath(dstPath).promises.symlink(srcPath, dstPath, type),
+		truncate: (path: string, len: number) =>
+			this.processPath(path).promises.truncate(path, len),
+		unlink: (path: string) => this.processPath(path).promises.unlink(path),
+		utimes: (path: string, atime: number | Date, mtime: number | Date) =>
+			this.processPath(path).promises.utimes(path, atime, mtime),
+		writeFile: (
+			path: string,
+			data: Uint8Array | string,
+			options?: { encoding: string; mode: number; flag: string },
+		) => {
+			if (data instanceof Uint8Array && !(data instanceof Filer.Buffer)) {
+				data = Filer.Buffer.from(data);
+			}
+
+			return this.processPath(path).promises.writeFile(path, data, options);
+		},
+	};
 }

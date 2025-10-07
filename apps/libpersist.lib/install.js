@@ -1,21 +1,30 @@
 export default function install(anura) {
-    const directories = anura.settings.get("directories");
-    
-    anura.fs.exists(directories["opt"] + "/anura.persistence", (exists) => {
-        if (exists) return;
-        anura.fs.mkdir(directories["opt"] + "/anura.persistence")
-        anura.fs.mkdir(directories["opt"] + "/anura.persistence/providers")
-        anura.fs.mkdir(directories["opt"] + "/anura.persistence/providers/anureg")
+	const directories = anura.settings.get("directories");
 
-        anura.fs.writeFile(directories["opt"] + "/anura.persistence/providers/anureg/manifest.json", JSON.stringify({
-            "name": "anureg",
-            "vendor": "[[internal]]",
-            "description": "Anura's default persistance provider, using a simple JSON file",
-            "handler": "index.js"
-        }))
+	anura.fs.exists(directories["opt"] + "/anura.persistence", async (exists) => {
+		if (exists) return;
+		await anura.fs.promises.mkdir(directories["opt"] + "/anura.persistence");
+		await anura.fs.promises.mkdir(
+			directories["opt"] + "/anura.persistence/providers",
+		);
+		await anura.fs.promises.mkdir(
+			directories["opt"] + "/anura.persistence/providers/anureg",
+		);
 
-        anura.fs.writeFile(directories["opt"] + "/anura.persistence/providers/anureg/index.js", 
-`const { PersistenceProvider } = await anura.import("anura.persistence");
+		await anura.fs.promises.writeFile(
+			directories["opt"] + "/anura.persistence/providers/anureg/manifest.json",
+			JSON.stringify({
+				name: "anureg",
+				vendor: "[[internal]]",
+				description:
+					"Anura's default persistance provider, using a simple JSON file",
+				handler: "index.js",
+			}),
+		);
+
+		await anura.fs.promises.writeFile(
+			directories["opt"] + "/anura.persistence/providers/anureg/index.js",
+			`const { PersistenceProvider } = await anura.import("anura.persistence");
 export default class Anureg extends PersistenceProvider {
     cache = {};
     fs;
@@ -58,8 +67,26 @@ export default class Anureg extends PersistenceProvider {
         this.cache[prop] = val;
         return new Promise((r) => this.fs.writeFile(this.file, JSON.stringify(this.cache), r));
     }
+
+    createStoreFn(stateful, win) {
+        return async (
+            target,
+            ident,
+            _backing
+        ) => {
+            target = (await this.get("dreamland." + ident)) || target;
+
+            win.addEventListener("close", () => {
+                console.info("[dreamland.js]: saving " + ident);
+                this.set("dreamland." + ident, target);
+            });
+            
+            return stateful(target);
+        }
+    }
 }
 export const using = ["fs", "basepath"];
-export const lifecycle = ["init"];`)
-    });
+export const lifecycle = ["init"];`,
+		);
+	});
 }
